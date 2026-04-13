@@ -6,7 +6,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mu엇이든 Mul어 Board</title>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+/* ---- reactions (safe add) ---- */
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
+
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -663,30 +688,7 @@ async function submitPost() {
   try {
     await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
     toast('게시물이 올라갔어요! 🎉');
-    state.showWrite=false; await 
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-fetchPosts();
+    state.showWrite=false; await fetchPosts();
   } catch(e) {
     toast('게시에 실패했어요.');
     if(btn){btn.disabled=false;btn.textContent='게시하기 →';}
@@ -703,30 +705,7 @@ function confirmDelete(id) {
 }
 async function doDelete(id) {
   closeModal();
-  try { await removePost(id); toast('삭제됐어요.'); await 
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-fetchPosts(); }
+  try { await removePost(id); toast('삭제됐어요.'); await fetchPosts(); }
   catch(e) { toast('삭제에 실패했어요.'); }
 }
 
@@ -806,30 +785,7 @@ async function tryLogin() {
   if(pw===ADMIN_PW){
     state.isAdmin=true; sessionStorage.setItem('isAdmin','true');
     closeModal(); toast('관리자로 로그인했어요 👑');
-    await 
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-fetchPosts();
+    await fetchPosts();
   } else {
     const err=document.getElementById('loginErr');
     if(err)err.style.display='block';
@@ -839,30 +795,7 @@ fetchPosts();
 function logout() {
   state.isAdmin=false; sessionStorage.removeItem('isAdmin');
   if(state.activeTab==='secret')state.activeTab='all';
-  toast('로그아웃됐어요.'); 
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-fetchPosts();
+  toast('로그아웃됐어요.'); fetchPosts();
 }
 
 /* ── Modal ── */
@@ -873,7 +806,10 @@ function openModal(html,large=false) {
 function closeModal(){document.getElementById('modalArea').innerHTML='';}
 function handleBd(e){if(e.target===e.currentTarget)closeModal();}
 
+fetchPosts();
 
+
+/* ---- reactions (safe add) ---- */
 let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
 function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
 
@@ -896,7 +832,6 @@ function delComment(id,i){
   saveReactions(); render();
 }
 
-fetchPosts();
 </script>
 </body>
 </html>
