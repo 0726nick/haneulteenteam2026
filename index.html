@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,9 +7,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
-/* ---- reactions (safe add) ---- */
+
+/* ---- reactions (improved) ---- */
 let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
+
+function saveReactions(){
+  localStorage.setItem('reactions',JSON.stringify(reactions));
+  localStorage.setItem('myLikes',JSON.stringify(myLikes));
+}
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  if(!myLikes[id]){
+    reactions[id].likes++;
+    myLikes[id]=true;
+  } else {
+    reactions[id].likes--;
+    delete myLikes[id];
+  }
+  saveReactions(); render();
+}
+
+function toggleCommentBox(id){
+  const el = document.getElementById('cbox-'+id);
+  if(el) el.style.display = el.style.display==='none'?'block':'none';
+}
+
+function addComment(id){
+  const input = document.getElementById('cinput-'+id);
+  const text = input.value.trim();
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  input.value='';
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
 
 function likePost(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
@@ -413,6 +450,12 @@ const DEFAULT_CATS = [
 const COLORS = ['#7ab3cc','#e07d5a','#a8cedd','#eba98e','#b5a4c8','#84bfa8','#e8b86d','#c98ca0','#8fb9a8','#d4956a'];
 const ICONS = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛','🔥','🎯','📚','🧠','💭','🎈','🪴','🌈','🧩','🕯️','🎤','🎧'];
 
+
+let localSecretPosts = JSON.parse(localStorage.getItem('secretPosts')||'[]');
+function saveSecretPosts(){
+  localStorage.setItem('secretPosts',JSON.stringify(localSecretPosts));
+}
+
 let state = {
   isAdmin: sessionStorage.getItem('isAdmin') === 'true',
   activeTab: 'all',
@@ -500,7 +543,14 @@ async function fetchPosts() {
       else showErrBanner(`[${error.code}] ${error.message}`);
       return;
     }
-    state.posts = state.isAdmin ? (data||[]) : (data||[]).filter(p => !p.is_secret);
+    
+let dbPosts = (data||[]);
+if(state.isAdmin){
+  state.posts = [...localSecretPosts, ...dbPosts];
+} else {
+  state.posts = dbPosts;
+}
+
   } catch(e) {
     state.loading = false; showErrBanner(e?.message || String(e)); return;
   }
@@ -630,16 +680,26 @@ function renderApp() {
           <div class="card-footer">
             <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
             ${delBtn}
+
 <div style="margin-top:6px;font-size:12px">
 👍 ${reactions[p.id]?.likes||0}
-<button class="btn btn-sm" onclick="likePost(${p.id})">좋아요</button>
-<button class="btn btn-sm" onclick="addComment(${p.id})">댓글</button>
+<button class="btn btn-sm" onclick="likePost(${p.id})">
+${myLikes[p.id]?'취소':'좋아요'}
+</button>
+<button class="btn btn-sm" onclick="toggleCommentBox(${p.id})">댓글</button>
 </div>
+
+<div id="cbox-${p.id}" style="display:none;margin-top:6px">
+  <input id="cinput-${p.id}" placeholder="댓글을 입력하세요" style="width:70%;padding:4px">
+  <button class="btn btn-sm" onclick="addComment(${p.id})">등록</button>
+</div>
+
 <div style="font-size:12px;margin-top:5px">
 ${(reactions[p.id]?.comments||[]).map((c,i)=>`
 <div>💬 ${c} ${state.isAdmin?`<button onclick="delComment(${p.id},${i})">❌</button>`:''}</div>`).join('')}
 </div>
-          </div>
+</div>
+
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -686,7 +746,17 @@ async function submitPost() {
   const btn=document.getElementById('submitBtn');
   if(btn){btn.disabled=true;btn.textContent='올리는 중...';}
   try {
-    await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
+    
+if(isSecret){
+  localSecretPosts.unshift({
+    id: Date.now(),
+    type,title,content,author,author_type:authorType,is_secret:true,created_at:new Date().toISOString()
+  });
+  saveSecretPosts();
+} else {
+  await insertPost({type,title,content,author,author_type:authorType,is_secret:false});
+}
+
     toast('게시물이 올라갔어요! 🎉');
     state.showWrite=false; await fetchPosts();
   } catch(e) {
@@ -809,9 +879,47 @@ function handleBd(e){if(e.target===e.currentTarget)closeModal();}
 fetchPosts();
 
 
-/* ---- reactions (safe add) ---- */
+
+/* ---- reactions (improved) ---- */
 let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
+
+function saveReactions(){
+  localStorage.setItem('reactions',JSON.stringify(reactions));
+  localStorage.setItem('myLikes',JSON.stringify(myLikes));
+}
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  if(!myLikes[id]){
+    reactions[id].likes++;
+    myLikes[id]=true;
+  } else {
+    reactions[id].likes--;
+    delete myLikes[id];
+  }
+  saveReactions(); render();
+}
+
+function toggleCommentBox(id){
+  const el = document.getElementById('cbox-'+id);
+  if(el) el.style.display = el.style.display==='none'?'block':'none';
+}
+
+function addComment(id){
+  const input = document.getElementById('cinput-'+id);
+  const text = input.value.trim();
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  input.value='';
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
 
 function likePost(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
