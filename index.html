@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,9 +7,7 @@
 <title>Mu엇이든 Mul어 Board</title>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-
-
-/* ---- reactions (improved) ---- */
+/* reactions */
 let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
 let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
 
@@ -19,19 +18,16 @@ function saveReactions(){
 
 function likePost(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  if(!myLikes[id]){
+
+  if(myLikes[id]){
+    reactions[id].likes = Math.max(0, reactions[id].likes-1);
+    delete myLikes[id];
+  } else {
     reactions[id].likes++;
     myLikes[id]=true;
-  } else {
-    reactions[id].likes--;
-    delete myLikes[id];
   }
-  saveReactions(); render();
-}
-
-function toggleCommentBox(id){
-  const el = document.getElementById('cbox-'+id);
-  if(el) el.style.display = el.style.display==='none'?'block':'none';
+  saveReactions();
+  render();
 }
 
 function addComment(id){
@@ -41,31 +37,14 @@ function addComment(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
   reactions[id].comments.push(text);
   input.value='';
-  saveReactions(); render();
+  saveReactions();
+  render();
 }
 
 function delComment(id,i){
   reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
+  saveReactions();
+  render();
 }
 
 </script>
@@ -195,7 +174,7 @@ body {
   color: var(--sky-dark);
   font-size: 50px;
 }
-.hero-board { font-size:20px;
+.hero-board {
   font-family: 'DM Serif Display', serif;
   font-size: 22px;
   color: var(--txt2);
@@ -397,7 +376,7 @@ body {
   .row2 { grid-template-columns: 1fr; }
   .hero-mu, .hero-mul { font-size: 34px; }
   .hero-mu em, .hero-mul em { font-size: 40px; }
-  .hero-board { font-size:20px; font-size: 18px; }
+  .hero-board { font-size: 18px; }
   .container { padding: 1.25rem 1rem; }
 }
 </style>
@@ -449,12 +428,6 @@ const DEFAULT_CATS = [
 
 const COLORS = ['#7ab3cc','#e07d5a','#a8cedd','#eba98e','#b5a4c8','#84bfa8','#e8b86d','#c98ca0','#8fb9a8','#d4956a'];
 const ICONS = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛','🔥','🎯','📚','🧠','💭','🎈','🪴','🌈','🧩','🕯️','🎤','🎧'];
-
-
-let localSecretPosts = JSON.parse(localStorage.getItem('secretPosts')||'[]');
-function saveSecretPosts(){
-  localStorage.setItem('secretPosts',JSON.stringify(localSecretPosts));
-}
 
 let state = {
   isAdmin: sessionStorage.getItem('isAdmin') === 'true',
@@ -543,14 +516,7 @@ async function fetchPosts() {
       else showErrBanner(`[${error.code}] ${error.message}`);
       return;
     }
-    
-let dbPosts = (data||[]);
-if(state.isAdmin){
-  state.posts = [...localSecretPosts, ...dbPosts];
-} else {
-  state.posts = dbPosts;
-}
-
+    state.posts = state.isAdmin ? (data||[]) : (data||[]).filter(p => !p.is_secret);
   } catch(e) {
     state.loading = false; showErrBanner(e?.message || String(e)); return;
   }
@@ -680,26 +646,77 @@ function renderApp() {
           <div class="card-footer">
             <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
             ${delBtn}
+<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
 
-<div style="margin-top:6px;font-size:12px">
+<div style="margin-bottom:8px;font-size:13px">
 👍 ${reactions[p.id]?.likes||0}
 <button class="btn btn-sm" onclick="likePost(${p.id})">
 ${myLikes[p.id]?'취소':'좋아요'}
 </button>
-<button class="btn btn-sm" onclick="toggleCommentBox(${p.id})">댓글</button>
 </div>
 
-<div id="cbox-${p.id}" style="display:none;margin-top:6px">
-  <input id="cinput-${p.id}" placeholder="댓글을 입력하세요" style="width:70%;padding:4px">
-  <button class="btn btn-sm" onclick="addComment(${p.id})">등록</button>
+<div style="display:flex;align-items:center;gap:6px;background:#f5f5f5;border-radius:10px;padding:6px 10px;margin-bottom:8px;">
+<span style="font-size:14px;opacity:0.6">✏️</span>
+<textarea id="cinput-${p.id}" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); addComment(${p.id}); }" placeholder="댓글을 남겨보세요"
+style="
+width:100%;
+border:none;
+outline:none;
+resize:none;
+background:transparent;
+font-size:14px;
+line-height:1.4;
+min-height:60px;
+
+onkeydown="if(event.key==='Enter') addComment(${p.id})"/>
 </div>
 
-<div style="font-size:12px;margin-top:5px">
+<div style="font-size:12px">
 ${(reactions[p.id]?.comments||[]).map((c,i)=>`
-<div>💬 ${c} ${state.isAdmin?`<button onclick="delComment(${p.id},${i})">❌</button>`:''}</div>`).join('')}
-</div>
+  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;">
+
+    <!-- 연결선 -->
+    <div style="
+      width:2px;
+      background:#e5e7eb;
+      border-radius:2px;
+      margin-left:4px;
+    "></div>
+
+    <!-- 댓글 카드 -->
+    <div style="
+      flex:1;
+      background:#ffffff;
+      border-radius:14px;
+      padding:10px 12px;
+      border:1px solid #e5e7eb;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04);
+      margin-left:0;
+    ">
+
+      <div style="font-size:11px;opacity:0.5;margin-bottom:4px">
+        익명
+      </div>
+
+      <div style="font-size:13px;line-height:1.4">
+        💬 ${c}
+      </div>
+
+      ${state.isAdmin ? `
+      <div style="text-align:right;margin-top:4px">
+        <button onclick="delComment(${p.id},${i})" style="font-size:11px;opacity:0.6">
+          삭제
+        </button>
+      </div>` : ''}
+
+    </div>
+
+  </div>
+`).join('')}
 </div>
 
+</div>
+          </div>
         </div>
       </div>`;
     }).join('')}</div>`;
@@ -746,17 +763,7 @@ async function submitPost() {
   const btn=document.getElementById('submitBtn');
   if(btn){btn.disabled=true;btn.textContent='올리는 중...';}
   try {
-    
-if(isSecret){
-  localSecretPosts.unshift({
-    id: Date.now(),
-    type,title,content,author,author_type:authorType,is_secret:true,created_at:new Date().toISOString()
-  });
-  saveSecretPosts();
-} else {
-  await insertPost({type,title,content,author,author_type:authorType,is_secret:false});
-}
-
+    await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
     toast('게시물이 올라갔어요! 🎉');
     state.showWrite=false; await fetchPosts();
   } catch(e) {
@@ -815,8 +822,8 @@ function openCatManager() {
     </div>`, true);
 }
 
-function pickColor(col) { state.newColor=col; document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected')); event.target.classList.add('selected'); }
-function pickIcon(ic) { state.newIcon=ic; document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected')); event.target.classList.add('selected'); }
+function pickColor(col) { state.newColor=col; event.target.classList.add('selected'); }
+function pickIcon(ic) { state.newIcon=ic; event.target.classList.add('selected'); }
 
 function removeCat(i) {
   if(state.cats.length<=1){toast('카테고리는 최소 1개 필요해요!');return;}
@@ -878,9 +885,7 @@ function handleBd(e){if(e.target===e.currentTarget)closeModal();}
 
 fetchPosts();
 
-
-
-/* ---- reactions (improved) ---- */
+/* reactions */
 let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
 let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
 
@@ -891,19 +896,16 @@ function saveReactions(){
 
 function likePost(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  if(!myLikes[id]){
+
+  if(myLikes[id]){
+    reactions[id].likes = Math.max(0, reactions[id].likes-1);
+    delete myLikes[id];
+  } else {
     reactions[id].likes++;
     myLikes[id]=true;
-  } else {
-    reactions[id].likes--;
-    delete myLikes[id];
   }
-  saveReactions(); render();
-}
-
-function toggleCommentBox(id){
-  const el = document.getElementById('cbox-'+id);
-  if(el) el.style.display = el.style.display==='none'?'block':'none';
+  saveReactions();
+  render();
 }
 
 function addComment(id){
@@ -913,31 +915,14 @@ function addComment(id){
   if(!reactions[id]) reactions[id]={likes:0,comments:[]};
   reactions[id].comments.push(text);
   input.value='';
-  saveReactions(); render();
+  saveReactions();
+  render();
 }
 
 function delComment(id,i){
   reactions[id].comments.splice(i,1);
-  saveReactions(); render();
-}
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].likes++;
-  saveReactions(); render();
-}
-
-function addComment(id){
-  const text=prompt('댓글 입력');
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  saveReactions(); render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions(); render();
+  saveReactions();
+  render();
 }
 
 </script>
