@@ -3,267 +3,216 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>커뮤니티 게시판</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>하늘청소년부 게시판</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #f7f6f3;
-    --surface: #ffffff;
-    --surface2: #f2f1ee;
-    --border: #e4e2dc;
-    --border2: #d0cec7;
-    --txt: #1a1917;
-    --txt2: #6b6860;
-    --txt3: #9e9b94;
-    --accent: #2a5caa;
-    --accent-light: #e8eef8;
-    --accent-dark: #1e4585;
-    --green: #1a7a4a;
-    --green-light: #e6f4ed;
-    --amber: #a05c00;
-    --amber-light: #fdf3e3;
-    --red: #c0392b;
-    --red-light: #fdecea;
-    --r: 10px;
-    --r-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  }
-
-  body {
-    font-family: 'Noto Sans KR', sans-serif;
-    background: var(--bg);
-    color: var(--txt);
-    font-size: 14px;
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  /* Header */
-  .header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 100;
-  }
-  .header-inner {
-    max-width: 800px; margin: 0 auto;
-    padding: 0 1.25rem;
-    height: 54px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 15px; font-weight: 600; color: var(--txt);
-    text-decoration: none;
-  }
-  .logo-mark {
-    width: 28px; height: 28px; border-radius: 8px;
-    background: var(--accent); display: flex; align-items: center; justify-content: center;
-  }
-  .logo-mark svg { width: 14px; height: 14px; fill: white; }
-
-  /* Buttons */
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 14px; border-radius: var(--r-sm);
-    font-size: 13px; font-family: inherit; font-weight: 500;
-    cursor: pointer; border: 1px solid var(--border2);
-    background: var(--surface); color: var(--txt2);
-    transition: all 0.15s; white-space: nowrap;
-  }
-  .btn:hover { background: var(--surface2); color: var(--txt); }
-  .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-  .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: white; }
-  .btn-danger { background: var(--red-light); color: var(--red); border-color: #f5b8b3; }
-  .btn-danger:hover { background: #f9d0cd; }
-  .btn-sm { padding: 5px 10px; font-size: 12px; }
-  .btn-ghost { border-color: transparent; background: transparent; }
-  .btn-ghost:hover { background: var(--surface2); }
-  .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-
-  /* Container */
-  .container { max-width: 800px; margin: 0 auto; padding: 1.5rem 1.25rem; }
-
-  /* Tabs */
-  .tab-bar {
-    display: flex; gap: 2px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 4px;
-    margin-bottom: 1.25rem;
-  }
-  .tab {
-    flex: 1; text-align: center; padding: 7px 6px;
-    border-radius: var(--r-sm); font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; background: transparent;
-    color: var(--txt3); transition: all 0.15s; font-family: inherit;
-  }
-  .tab:hover { color: var(--txt2); background: var(--surface2); }
-  .tab.active { background: var(--surface2); color: var(--txt); }
-  .tab-secret { color: var(--amber) !important; }
-  .tab-secret.active { background: var(--amber-light) !important; color: var(--amber) !important; }
-
-  /* Stats */
-  .stats {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-    margin-bottom: 1.25rem;
-  }
-  .stat {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 14px 16px;
-    box-shadow: var(--shadow);
-  }
-  .stat-label { font-size: 11px; color: var(--txt3); margin-bottom: 4px; letter-spacing: 0.02em; }
-  .stat-value { font-size: 24px; font-weight: 600; color: var(--txt); font-family: 'DM Mono', monospace; }
-  .stat-value.accent { color: var(--accent); }
-  .stat-value.amber { color: var(--amber); }
-
-  /* Admin bar */
-  .admin-bar {
-    background: var(--amber-light); border: 1px solid #e8c97a;
-    border-radius: var(--r); padding: 10px 16px; margin-bottom: 1rem;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .admin-label { font-size: 12px; color: var(--amber); font-weight: 500; display: flex; align-items: center; gap: 6px; }
-
-  /* Toolbar */
-  .toolbar {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;
-  }
-  .search-wrap { flex: 1; position: relative; }
-  .search-wrap input {
-    width: 100%; padding: 8px 12px 8px 34px;
-    border: 1px solid var(--border2); border-radius: var(--r-sm);
-    background: var(--surface); font-family: inherit; font-size: 13px;
-    color: var(--txt); outline: none;
-    transition: border-color 0.15s;
-  }
-  .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(42,92,170,0.1); }
-  .search-icon {
-    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
-    color: var(--txt3); pointer-events: none;
-  }
-  .search-icon svg { width: 14px; height: 14px; }
-
-  /* Write panel */
-  .write-panel {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 1.25rem;
-    margin-bottom: 1.25rem; box-shadow: var(--shadow);
-    animation: slideDown 0.2s ease;
-  }
-  @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-  .write-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; }
-  .field { margin-bottom: 12px; }
-  .field label { font-size: 12px; color: var(--txt2); font-weight: 500; display: block; margin-bottom: 5px; }
-  .field input, .field select, .field textarea {
-    width: 100%; padding: 9px 12px;
-    border: 1px solid var(--border2); border-radius: var(--r-sm);
-    background: var(--bg); font-family: inherit; font-size: 13px;
-    color: var(--txt); outline: none; transition: border-color 0.15s;
-  }
-  .field input:focus, .field select:focus, .field textarea:focus {
-    border-color: var(--accent); background: white;
-    box-shadow: 0 0 0 3px rgba(42,92,170,0.1);
-  }
-  .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .toggle-label {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 13px; color: var(--txt2); cursor: pointer;
-    padding: 8px 12px; border-radius: var(--r-sm);
-    border: 1px solid var(--border);
-    transition: all 0.15s; user-select: none;
-  }
-  .toggle-label:hover { border-color: var(--border2); background: var(--surface2); }
-  .toggle-label input { width: 14px; height: 14px; accent-color: var(--red); }
-  .toggle-label.checked { border-color: #f5b8b3; background: var(--red-light); color: var(--red); }
-  .write-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-
-  /* Posts */
-  .post-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); margin-bottom: 8px;
-    box-shadow: var(--shadow); overflow: hidden;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .post-card:hover { border-color: var(--border2); box-shadow: var(--shadow-md); }
-  .post-card.secret-card { border-left: 3px solid var(--red); }
-  .post-inner { padding: 14px 16px; }
-  .post-top { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
-  .post-left { flex: 1; min-width: 0; }
-  .post-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
-  .badge {
-    display: inline-flex; align-items: center;
-    padding: 2px 8px; border-radius: 20px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
-  }
-  .badge-notice { background: var(--accent-light); color: var(--accent); }
-  .badge-suggest { background: var(--green-light); color: var(--green); }
-  .badge-reply { background: var(--amber-light); color: var(--amber); }
-  .badge-question { background: var(--surface2); color: var(--txt2); }
-  .badge-secret { background: var(--red-light); color: var(--red); }
-  .post-title { font-size: 14px; font-weight: 600; color: var(--txt); margin-bottom: 5px; line-height: 1.45; }
-  .post-meta { font-size: 11px; color: var(--txt3); display: flex; align-items: center; gap: 6px; }
-  .meta-dot { width: 2px; height: 2px; border-radius: 50%; background: var(--txt3); }
-  .post-content { font-size: 13px; color: var(--txt2); line-height: 1.65; padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--border); white-space: pre-wrap; word-break: break-word; }
-
-  /* Empty */
-  .empty { text-align: center; padding: 4rem 1rem; color: var(--txt3); }
-  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
-  .empty-text { font-size: 14px; }
-
-  /* Loading */
-  .loading { text-align: center; padding: 3rem; color: var(--txt3); }
-  .spinner { width: 24px; height: 24px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Modal */
-  .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 999; padding: 1rem;
-    animation: fadeIn 0.15s ease;
-  }
-  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-  .modal {
-    background: var(--surface); border-radius: var(--r);
-    padding: 1.5rem; width: 100%; max-width: 360px;
-    box-shadow: var(--shadow-md); border: 1px solid var(--border2);
-    animation: popIn 0.2s ease;
-  }
-  @keyframes popIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
-  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
-  .error-msg { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
-  .hint-box {
-    margin-top: 12px; padding: 10px 12px;
-    background: var(--surface2); border-radius: var(--r-sm);
-    font-size: 11px; color: var(--txt3); line-height: 1.5;
-  }
-
-  /* Toast */
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--txt); color: white; padding: 10px 18px;
-    border-radius: 20px; font-size: 13px; font-weight: 500;
-    z-index: 9999; white-space: nowrap;
-    animation: toastIn 0.2s ease;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  }
-  @keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
-
-  /* Responsive */
-  @media (max-width: 600px) {
-    .stats { grid-template-columns: repeat(2, 1fr); }
-    .row2 { grid-template-columns: 1fr; }
-    .tab { font-size: 11px; padding: 6px 4px; }
-    .header-inner { padding: 0 1rem; }
-    .container { padding: 1rem; }
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sky: #4f9cf9; --sky-light: #e8f3ff; --sky-dark: #2563eb;
+  --mint: #34d399; --mint-light: #d1fae5;
+  --coral: #f87171; --coral-light: #fee2e2;
+  --yellow: #fbbf24; --yellow-light: #fef3c7;
+  --purple: #a78bfa; --purple-light: #ede9fe;
+  --bg: #f0f7ff; --surface: #ffffff;
+  --border: #dbeafe; --border2: #bfdbfe;
+  --txt: #1e3a5f; --txt2: #4b6a8a; --txt3: #8aaac8;
+  --r: 16px; --r-sm: 10px; --r-xs: 6px;
+  --shadow: 0 2px 8px rgba(79,156,249,0.1);
+  --shadow-md: 0 6px 20px rgba(79,156,249,0.15);
+  --shadow-lg: 0 12px 40px rgba(79,156,249,0.2);
+}
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--txt); font-size: 14px; line-height: 1.6; min-height: 100vh;
+}
+.header {
+  background: white; border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 12px rgba(79,156,249,0.1);
+}
+.header-inner {
+  max-width: 1100px; margin: 0 auto; padding: 0 1.5rem;
+  height: 62px; display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900;
+  color: var(--sky-dark); text-decoration: none;
+}
+.logo-icon {
+  width: 36px; height: 36px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--sky), var(--sky-dark));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; box-shadow: 0 3px 8px rgba(79,156,249,0.35);
+}
+.header-right { display: flex; align-items: center; gap: 8px; }
+.hero {
+  background: linear-gradient(135deg, #1d4ed8 0%, #4f9cf9 55%, #34d399 100%);
+  padding: 2.5rem 1.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.hero-title {
+  font-family: 'Nunito', sans-serif; font-size: 28px; font-weight: 900;
+  color: white; margin-bottom: 6px; position: relative;
+}
+.hero-sub { font-size: 14px; color: rgba(255,255,255,0.88); position: relative; font-weight: 500; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--r-sm);
+  font-size: 13px; font-family: inherit; font-weight: 700;
+  cursor: pointer; border: none; transition: all 0.18s; white-space: nowrap;
+}
+.btn-sky { background: var(--sky); color: white; box-shadow: 0 3px 10px rgba(79,156,249,0.35); }
+.btn-sky:hover { background: var(--sky-dark); transform: translateY(-1px); }
+.btn-outline { background: white; color: var(--sky); border: 2px solid var(--sky); }
+.btn-outline:hover { background: var(--sky-light); }
+.btn-coral { background: var(--coral); color: white; box-shadow: 0 2px 8px rgba(248,113,113,0.3); }
+.btn-coral:hover { background: #ef4444; transform: translateY(-1px); }
+.btn-mint { background: var(--mint); color: white; box-shadow: 0 2px 8px rgba(52,211,153,0.3); }
+.btn-mint:hover { background: #10b981; }
+.btn-ghost { background: transparent; color: var(--txt2); border: 2px solid var(--border2); }
+.btn-ghost:hover { background: var(--sky-light); border-color: var(--sky); color: var(--sky); }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-lg { padding: 11px 22px; font-size: 15px; border-radius: var(--r); }
+.container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.stat {
+  background: white; border-radius: var(--r); padding: 16px 18px;
+  box-shadow: var(--shadow); border: 2px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.stat-label { font-size: 11px; color: var(--txt3); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.stat-value { font-family: 'Nunito', sans-serif; font-size: 26px; font-weight: 900; color: var(--txt); line-height: 1.1; }
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
+.search-wrap { flex: 1; min-width: 180px; position: relative; }
+.search-wrap input {
+  width: 100%; padding: 10px 14px 10px 38px;
+  border: 2px solid var(--border2); border-radius: var(--r-sm);
+  background: white; font-family: inherit; font-size: 13px;
+  color: var(--txt); outline: none; transition: all 0.18s; font-weight: 500;
+}
+.search-wrap input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(79,156,249,0.12); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+.tab-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.tab {
+  padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
+  cursor: pointer; border: 2px solid var(--border2); background: white;
+  color: var(--txt2); transition: all 0.18s; font-family: inherit;
+}
+.tab:hover { border-color: var(--sky); color: var(--sky); background: var(--sky-light); }
+.tab.active { background: var(--sky); color: white; border-color: var(--sky); box-shadow: 0 3px 8px rgba(79,156,249,0.3); }
+.tab-secret { border-color: var(--yellow) !important; color: #b45309 !important; }
+.tab-secret.active { background: var(--yellow) !important; color: white !important; border-color: var(--yellow) !important; }
+.admin-bar {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 2px solid var(--yellow); border-radius: var(--r); padding: 10px 16px;
+  margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;
+}
+.admin-label { font-size: 13px; color: #92400e; font-weight: 700; }
+.write-panel {
+  background: white; border: 2px solid var(--border2);
+  border-radius: var(--r); padding: 1.5rem; margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-md); animation: slideDown 0.2s ease;
+}
+@keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+.write-title { font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 900; margin-bottom: 1.25rem; color: var(--txt); }
+.field { margin-bottom: 14px; }
+.field label { font-size: 12px; color: var(--txt2); font-weight: 700; display: block; margin-bottom: 5px; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 10px 14px;
+  border: 2px solid var(--border2); border-radius: var(--r-sm);
+  background: var(--bg); font-family: inherit; font-size: 13px;
+  color: var(--txt); outline: none; transition: all 0.18s; font-weight: 500;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--sky); background: white; box-shadow: 0 0 0 3px rgba(79,156,249,0.12);
+}
+.field textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.secret-toggle {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  border-radius: var(--r-sm); border: 2px solid var(--border2);
+  cursor: pointer; font-size: 13px; color: var(--txt2); font-weight: 700;
+  transition: all 0.18s; user-select: none; background: var(--bg);
+}
+.secret-toggle:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+.secret-toggle.on { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+.secret-toggle input { width: 15px; height: 15px; accent-color: var(--coral); }
+.write-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border); }
+.posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.post-card {
+  background: white; border: 2px solid var(--border);
+  border-radius: var(--r); overflow: hidden;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  display: flex; flex-direction: column;
+}
+.post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--border2); }
+.post-card.secret-card { border-color: #fca5a5; }
+.card-top { height: 6px; }
+.card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+.card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-secret { background: var(--coral-light); color: #b91c1c; }
+.card-title { font-size: 15px; font-weight: 700; color: var(--txt); margin-bottom: 8px; line-height: 1.45; }
+.card-content {
+  font-size: 13px; color: var(--txt2); line-height: 1.65; flex: 1; margin-bottom: 12px;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+}
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 2px solid var(--border); }
+.card-meta { font-size: 11px; color: var(--txt3); font-weight: 600; }
+.empty { text-align: center; padding: 5rem 1rem; }
+.empty-emoji { font-size: 52px; margin-bottom: 14px; }
+.empty-text { font-size: 15px; color: var(--txt3); font-weight: 700; }
+.loading { text-align: center; padding: 4rem; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border2); border-top-color: var(--sky); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--txt3); font-weight: 600; }
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(30,58,95,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999; padding: 1rem; animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal {
+  background: white; border-radius: var(--r); padding: 1.75rem;
+  width: 100%; max-width: 420px;
+  box-shadow: var(--shadow-lg); border: 2px solid var(--border2);
+  animation: popIn 0.2s ease;
+}
+.modal-lg { max-width: 560px; }
+@keyframes popIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+.modal-title { font-family: 'Nunito', sans-serif; font-size: 20px; font-weight: 900; margin-bottom: 1.25rem; color: var(--txt); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+.error-msg { font-size: 12px; color: var(--coral); margin-top: 5px; display: none; font-weight: 700; }
+.hint-box { margin-top: 12px; padding: 10px 14px; background: var(--sky-light); border-radius: var(--r-sm); font-size: 12px; color: var(--sky-dark); font-weight: 600; }
+.cat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; max-height: 260px; overflow-y: auto; }
+.cat-item { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 2px solid var(--border); border-radius: var(--r-sm); padding: 10px 12px; }
+.cat-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.cat-name { flex: 1; font-size: 13px; font-weight: 700; color: var(--txt); }
+.cat-key { font-size: 11px; color: var(--txt3); font-family: monospace; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border2); }
+.color-options { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.color-opt { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+.color-opt.selected { border-color: var(--txt); transform: scale(1.2); }
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: var(--txt); color: white; padding: 11px 22px;
+  border-radius: 24px; font-size: 13px; font-weight: 700;
+  z-index: 9999; white-space: nowrap;
+  animation: toastIn 0.2s ease; box-shadow: 0 6px 20px rgba(30,58,95,0.3);
+}
+@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+.setup-error { background: white; border: 2px solid var(--coral-light); border-radius: var(--r); padding: 2rem; box-shadow: var(--shadow-md); }
+.setup-error pre { background: var(--bg); border: 2px solid var(--border); border-radius: var(--r-sm); padding: 1rem; font-size: 11px; overflow-x: auto; line-height: 1.8; color: var(--txt); margin: 1rem 0; }
+@media (max-width: 700px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .posts-grid { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr; }
+  .hero-title { font-size: 22px; }
+}
 </style>
 </head>
 <body>
@@ -271,24 +220,21 @@
 <header class="header">
   <div class="header-inner">
     <a class="logo" href="#">
-      <div class="logo-mark">
-        <svg viewBox="0 0 16 16"><path d="M2 3h12v1.5L8 9 2 4.5V3zm0 3.5l6 4 6-4V13H2V6.5z"/></svg>
-      </div>
-      커뮤니티 게시판
+      <div class="logo-icon">✨</div>
+      하늘청소년부
     </a>
-    <div id="headerRight"></div>
+    <div class="header-right" id="headerRight"></div>
   </div>
 </header>
 
-<main class="container">
-  <div id="app">
-    <div class="loading">
-      <div class="spinner"></div>
-      <div>불러오는 중...</div>
-    </div>
-  </div>
-</main>
+<div class="hero">
+  <div class="hero-title">✝️ 하늘청소년부 게시판</div>
+  <div class="hero-sub">공지, 건의, 질문 뭐든 자유롭게 올려요!</div>
+</div>
 
+<main class="container">
+  <div id="app"><div class="loading"><div class="spinner"></div><div class="loading-text">불러오는 중...</div></div></div>
+</main>
 <div id="modalArea"></div>
 <div id="toastArea"></div>
 
@@ -296,9 +242,16 @@
 const SUPABASE_URL = 'https://bicovdsprnvntbxgtcny.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_YvNSSolhnmD0uMo9bTtamA_YaSIy4GB';
 const ADMIN_PW = 'haneulteenteam2026';
-
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const DEFAULT_CATS = [
+  { key:'notice',   label:'공지',  color:'#4f9cf9' },
+  { key:'suggest',  label:'건의',  color:'#34d399' },
+  { key:'question', label:'질문',  color:'#a78bfa' },
+  { key:'reply',    label:'답변',  color:'#fbbf24' },
+];
+const COLORS = ['#4f9cf9','#34d399','#a78bfa','#fbbf24','#f87171','#fb923c','#e879f9','#2dd4bf','#60a5fa','#f472b6'];
 
 let state = {
   isAdmin: sessionStorage.getItem('isAdmin') === 'true',
@@ -307,40 +260,42 @@ let state = {
   posts: [],
   loading: true,
   showWrite: false,
+  cats: JSON.parse(localStorage.getItem('board_cats') || 'null') || DEFAULT_CATS,
+  newColor: COLORS[0],
 };
 
-/* ── Utils ── */
-function toast(msg, duration = 2500) {
+function toast(msg, dur=2500) {
   const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
+  el.className = 'toast'; el.textContent = msg;
   document.getElementById('toastArea').appendChild(el);
-  setTimeout(() => el.remove(), duration);
+  setTimeout(() => el.remove(), dur);
 }
 
-function formatDate(iso) {
-  const d = new Date(iso), now = new Date();
-  const diff = now - d;
+function fmt(iso) {
+  const d = new Date(iso), now = new Date(), diff = now - d;
   if (diff < 60000) return '방금 전';
-  if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
-  if (diff < 86400000 * 7) return Math.floor(diff / 86400000) + '일 전';
-  return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  if (diff < 3600000) return Math.floor(diff/60000) + '분 전';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '시간 전';
+  if (diff < 86400000*7) return Math.floor(diff/86400000) + '일 전';
+  return d.toLocaleDateString('ko-KR', { month:'short', day:'numeric' });
 }
 
-const TYPE_LABELS = { notice: '공지', suggest: '건의', question: '질문', reply: '답변' };
-const TYPE_BADGE = { notice: 'badge-notice', suggest: 'badge-suggest', question: 'badge-question', reply: 'badge-reply' };
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-/* ── Supabase ── */
+function getCat(key) {
+  return state.cats.find(c => c.key === key) || { label: key, color: '#8aaac8' };
+}
+
+function saveCats() { localStorage.setItem('board_cats', JSON.stringify(state.cats)); }
+
+/* Supabase */
 function showSetupError() {
-  const el = document.getElementById('app');
-  el.innerHTML = `
-    <div style="background:#fff;border:1px solid #e4e2dc;border-radius:10px;padding:2rem;text-align:left;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
-      <div style="font-size:15px;font-weight:600;margin-bottom:8px;color:#c0392b">⚠️ Supabase 테이블이 없습니다</div>
-      <div style="font-size:13px;color:#6b6860;line-height:1.7;margin-bottom:1rem">
-        Supabase 대시보드 → <strong>SQL Editor</strong>에서 아래 SQL을 실행한 뒤 새로고침해 주세요.
-      </div>
-      <pre style="background:#f2f1ee;border:1px solid #e4e2dc;border-radius:8px;padding:1rem;font-size:11px;overflow-x:auto;line-height:1.8;color:#1a1917">create table posts (
+  document.getElementById('app').innerHTML = `<div class="setup-error">
+    <div style="font-size:17px;font-weight:700;color:#b91c1c;margin-bottom:8px">⚠️ 테이블 설정이 필요해요</div>
+    <p style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:4px">Supabase SQL Editor에서 아래 SQL을 실행해 주세요.</p>
+    <pre>create table posts (
   id bigint generated always as identity primary key,
   type text not null,
   title text not null,
@@ -350,59 +305,38 @@ function showSetupError() {
   is_secret boolean default false,
   created_at timestamptz default now()
 );
-
 alter table posts enable row level security;
-
-create policy "public read non-secret"
-  on posts for select using (is_secret = false);
-
-create policy "anyone insert"
-  on posts for insert with check (true);
-
-create policy "anyone delete"
-  on posts for delete using (true);</pre>
-      <button class="btn btn-primary" style="margin-top:1rem" onclick="location.reload()">새로고침</button>
-    </div>`;
+create policy "public read non-secret" on posts for select using (is_secret = false);
+create policy "anyone insert" on posts for insert with check (true);
+create policy "anyone delete" on posts for delete using (true);</pre>
+    <button class="btn btn-sky" onclick="location.reload()">새로고침</button>
+  </div>`;
 }
 
-function showErrorBanner(msg) {
-  const el = document.getElementById('app');
-  el.innerHTML = `
-    <div style="background:#fdecea;border:1px solid #f5b8b3;border-radius:10px;padding:1.25rem 1.5rem">
-      <div style="font-size:14px;font-weight:600;color:#c0392b;margin-bottom:6px">연결 오류</div>
-      <div style="font-size:12px;color:#a93226;font-family:monospace;word-break:break-all;background:#fff;padding:8px 10px;border-radius:6px;border:1px solid #f5b8b3">${msg}</div>
-      <button class="btn btn-sm" style="margin-top:10px" onclick="fetchPosts()">다시 시도</button>
+function showErrBanner(msg) {
+  document.getElementById('app').innerHTML = `
+    <div style="background:var(--coral-light);border:2px solid var(--coral);border-radius:var(--r);padding:1.25rem 1.5rem">
+      <div style="font-size:14px;font-weight:700;color:#b91c1c;margin-bottom:6px">연결 오류</div>
+      <div style="font-size:12px;color:#7f1d1d;font-family:monospace;background:white;padding:8px 10px;border-radius:8px;word-break:break-all">${esc(msg)}</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="fetchPosts()">다시 시도</button>
     </div>`;
 }
 
 async function fetchPosts() {
-  state.loading = true;
-  render();
+  state.loading = true; render();
   try {
-    const { data, error } = await db
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false });
-
+    const { data, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
     if (error) {
-      console.error('Supabase error:', error);
       state.loading = false;
-      if (error.code === '42P01' || (error.message && error.message.includes('does not exist'))) {
-        showSetupError();
-      } else {
-        showErrorBanner(`[${error.code}] ${error.message}`);
-      }
+      if (error.code === '42P01' || (error.message||'').includes('does not exist')) showSetupError();
+      else showErrBanner(`[${error.code}] ${error.message}`);
       return;
     }
-    state.posts = state.isAdmin ? (data || []) : (data || []).filter(p => !p.is_secret);
-  } catch (e) {
-    console.error('fetchPosts exception:', e);
-    state.loading = false;
-    showErrorBanner(e?.message || String(e));
-    return;
+    state.posts = state.isAdmin ? (data||[]) : (data||[]).filter(p => !p.is_secret);
+  } catch(e) {
+    state.loading = false; showErrBanner(e?.message || String(e)); return;
   }
-  state.loading = false;
-  render();
+  state.loading = false; render();
 }
 
 async function insertPost(post) {
@@ -410,18 +344,16 @@ async function insertPost(post) {
   if (error) throw error;
 }
 
-async function deletePost(id) {
+async function removePost(id) {
   const { error } = await db.from('posts').delete().eq('id', id);
   if (error) throw error;
 }
 
-/* ── Computed ── */
 function visiblePosts() {
   let list = [...state.posts];
   if (state.activeTab === 'secret') list = list.filter(p => p.is_secret);
-  else if (state.activeTab !== 'all') list = list.filter(p => p.type === state.activeTab && !p.is_secret);
-  else list = state.isAdmin ? list : list.filter(p => !p.is_secret);
-  if (state.activeTab === 'all' && !state.isAdmin) list = list.filter(p => !p.is_secret);
+  else if (state.activeTab !== 'all') list = list.filter(p => p.type === state.activeTab);
+  if (!state.isAdmin) list = list.filter(p => !p.is_secret);
   if (state.search.trim()) {
     const q = state.search.toLowerCase();
     list = list.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q));
@@ -429,306 +361,270 @@ function visiblePosts() {
   return list;
 }
 
-/* ── Render ── */
-function render() {
-  renderHeader();
-  renderApp();
-}
+/* Render */
+function render() { renderHeader(); renderApp(); }
 
 function renderHeader() {
   const el = document.getElementById('headerRight');
   if (state.isAdmin) {
     el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="badge badge-secret" style="font-size:11px">관리자</span>
-        <button class="btn btn-sm btn-ghost" onclick="logout()">로그아웃</button>
-      </div>`;
+      <span class="badge" style="background:#fef3c7;color:#92400e;font-size:12px">👑 관리자</span>
+      <button class="btn btn-ghost btn-sm" onclick="openCatManager()">카테고리 관리</button>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">로그아웃</button>`;
   } else {
-    el.innerHTML = `<button class="btn btn-sm" onclick="openAdminLogin()">관리자 로그인</button>`;
+    el.innerHTML = `<button class="btn btn-outline btn-sm" onclick="openAdminLogin()">관리자 로그인</button>`;
   }
 }
 
 function renderApp() {
   const el = document.getElementById('app');
   if (state.loading) {
-    el.innerHTML = `<div class="loading"><div class="spinner"></div><div>불러오는 중...</div></div>`;
+    el.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">게시물 불러오는 중...</div></div>`;
     return;
   }
-
   const all = state.posts;
   const pub = all.filter(p => !p.is_secret);
   const sec = all.filter(p => p.is_secret);
   const vp = visiblePosts();
 
-  const tabs = [
-    { key: 'all', label: '전체' },
-    { key: 'notice', label: '공지' },
-    { key: 'suggest', label: '건의' },
-    { key: 'question', label: '질문' },
-    { key: 'reply', label: '답변' },
-    ...(state.isAdmin ? [{ key: 'secret', label: '🔒 비공개', secret: true }] : []),
-  ];
-
-  const tabHtml = tabs.map(t => {
-    const cls = ['tab', t.key === state.activeTab ? 'active' : '', t.secret ? 'tab-secret' : ''].join(' ').trim();
-    return `<button class="${cls}" onclick="setTab('${t.key}')">${t.label}</button>`;
-  }).join('');
+  const statsHtml = `<div class="stats">
+    <div class="stat"><div class="stat-icon" style="background:#e8f3ff">📋</div><div class="stat-info"><div class="stat-label">전체</div><div class="stat-value">${all.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:#d1fae5">✅</div><div class="stat-info"><div class="stat-label">공개</div><div class="stat-value">${pub.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:#fee2e2">🔒</div><div class="stat-info"><div class="stat-label">비공개</div><div class="stat-value">${sec.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:#ede9fe">🏷️</div><div class="stat-info"><div class="stat-label">카테고리</div><div class="stat-value">${state.cats.length}</div></div></div>
+  </div>`;
 
   const adminBarHtml = state.isAdmin ? `
     <div class="admin-bar">
-      <span class="admin-label">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a3.5 3.5 0 0 1 3.5 3.5c0 1.4-.82 2.6-2 3.17V9l2 2-1 1-2-2-2 2-1-1 2-2V7.67A3.5 3.5 0 0 1 8 1zm0 1.5A2 2 0 1 0 8 6a2 2 0 0 0 0-3.5zM3 13a5 5 0 0 1 10 0H3z"/></svg>
-        관리자 모드 — 비공개 게시물 포함 전체 열람 및 삭제 가능
-      </span>
-      <span style="font-size:11px;color:var(--amber);font-family:'DM Mono',monospace">ADMIN</span>
+      <span class="admin-label">👑 관리자 모드 — 비공개 포함 전체 열람 및 삭제 가능</span>
+      <button class="btn btn-mint btn-sm" onclick="openCatManager()">카테고리 관리</button>
     </div>` : '';
 
-  const writeHtml = state.showWrite ? renderWritePanel() : '';
+  const tabs = [
+    { key:'all', label:'전체 ✨' },
+    ...state.cats.map(c => ({ key:c.key, label:c.label })),
+    ...(state.isAdmin ? [{ key:'secret', label:'🔒 비공개', secret:true }] : []),
+  ];
+  const tabHtml = tabs.map(t => {
+    const cls = ['tab', t.key===state.activeTab?'active':'', t.secret?'tab-secret':''].join(' ').trim();
+    return `<button class="${cls}" onclick="setTab('${esc(t.key)}')">${esc(t.label)}</button>`;
+  }).join('');
 
-  const postsHtml = vp.length === 0
-    ? `<div class="empty"><div class="empty-icon">◻</div><div class="empty-text">게시물이 없습니다</div></div>`
-    : vp.map(p => renderPostCard(p)).join('');
-
-  el.innerHTML = `
-    <div class="stats">
-      <div class="stat"><div class="stat-label">전체 게시물</div><div class="stat-value accent">${all.length}</div></div>
-      <div class="stat"><div class="stat-label">공개</div><div class="stat-value">${pub.length}</div></div>
-      <div class="stat"><div class="stat-label">비공개</div><div class="stat-value amber">${sec.length}</div></div>
-      <div class="stat"><div class="stat-label">카테고리</div><div class="stat-value">4</div></div>
-    </div>
-    ${adminBarHtml}
-    <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:1.25rem">
-      <div class="tab-bar" style="flex:1;margin-bottom:0">${tabHtml}</div>
-      <button class="btn btn-primary" style="white-space:nowrap" onclick="toggleWrite()">${state.showWrite ? '닫기' : '+ 글쓰기'}</button>
-    </div>
-    ${writeHtml}
-    <div class="toolbar">
-      <div class="search-wrap">
-        <span class="search-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 1a5.5 5.5 0 1 1 0 11 5.5 5.5 0 0 1 0-11zm0 1.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm4.47 8.03 2.5 2.5-1.06 1.06-2.5-2.5 1.06-1.06z"/></svg></span>
-        <input type="text" placeholder="제목, 내용, 작성자 검색..." value="${state.search}" oninput="setSearch(this.value)" />
-      </div>
-    </div>
-    ${postsHtml}
-  `;
-}
-
-function renderWritePanel() {
-  return `<div class="write-panel">
-    <div class="write-title">새 게시물 작성</div>
+  const writeHtml = state.showWrite ? `<div class="write-panel">
+    <div class="write-title">✏️ 새 게시물 작성</div>
     <div class="row2">
-      <div class="field">
-        <label>카테고리</label>
-        <select id="wType">
-          <option value="notice">공지사항</option>
-          <option value="suggest">건의사항</option>
-          <option value="question">질문</option>
-          <option value="reply">답변</option>
-        </select>
+      <div class="field"><label>카테고리</label>
+        <select id="wType">${state.cats.map(c=>`<option value="${esc(c.key)}">${esc(c.label)}</option>`).join('')}</select>
       </div>
-      <div class="field">
-        <label>작성자 표시</label>
-        <select id="wAuthorType" onchange="onAuthorTypeChange()">
+      <div class="field"><label>작성자 표시</label>
+        <select id="wAuthorType" onchange="onAuthorChange()">
           <option value="익명">익명으로 게시</option>
           <option value="닉네임">닉네임으로 게시</option>
           <option value="실명">실명으로 게시</option>
         </select>
       </div>
     </div>
-    <div class="field" id="authorNameField" style="display:none">
-      <label id="authorNameLabel">닉네임</label>
-      <input type="text" id="wAuthorName" placeholder="이름을 입력하세요" maxlength="30" />
+    <div class="field" id="authorField" style="display:none">
+      <label id="authorLbl">닉네임</label>
+      <input type="text" id="wAuthorName" placeholder="이름 입력" maxlength="30" />
     </div>
-    <div class="field">
-      <label>제목</label>
-      <input type="text" id="wTitle" placeholder="제목을 입력하세요" maxlength="100" />
-    </div>
-    <div class="field">
-      <label>내용</label>
-      <textarea id="wContent" placeholder="내용을 입력하세요"></textarea>
-    </div>
-    <label class="toggle-label" id="secretToggleLabel" onclick="toggleSecret()">
-      <input type="checkbox" id="wSecret" onclick="event.stopPropagation()" onchange="updateSecretLabel()" />
-      비공개 게시물 — 관리자만 열람 가능
+    <div class="field"><label>제목</label><input type="text" id="wTitle" placeholder="제목을 입력하세요" maxlength="100" /></div>
+    <div class="field"><label>내용</label><textarea id="wContent" placeholder="내용을 자유롭게 작성해 주세요 😊"></textarea></div>
+    <label class="secret-toggle" id="secretToggle" onclick="toggleSecret()">
+      <input type="checkbox" id="wSecret" onclick="event.stopPropagation()" onchange="updateSecretStyle()" />
+      🔒 비공개 게시물 (관리자만 볼 수 있어요)
     </label>
     <div class="write-footer">
-      <button class="btn" onclick="toggleWrite()">취소</button>
-      <button class="btn btn-primary" id="submitBtn" onclick="submitPost()">게시하기</button>
+      <button class="btn btn-ghost" onclick="toggleWrite()">취소</button>
+      <button class="btn btn-sky btn-lg" id="submitBtn" onclick="submitPost()">🚀 게시하기</button>
     </div>
-  </div>`;
-}
+  </div>` : '';
 
-function renderPostCard(p) {
-  const secretBadge = p.is_secret ? `<span class="badge badge-secret">비공개</span>` : '';
-  const deleteBtn = state.isAdmin
-    ? `<button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.id})" style="flex-shrink:0">삭제</button>`
-    : '';
-  return `<div class="post-card ${p.is_secret ? 'secret-card' : ''}">
-    <div class="post-inner">
-      <div class="post-top">
-        <div class="post-left">
-          <div class="post-badges">
-            <span class="badge ${TYPE_BADGE[p.type] || 'badge-question'}">${TYPE_LABELS[p.type] || p.type}</span>
+  let postsHtml;
+  if (vp.length === 0) {
+    postsHtml = `<div class="empty"><div class="empty-emoji">💬</div><div class="empty-text">아직 게시물이 없어요!</div></div>`;
+  } else {
+    postsHtml = `<div class="posts-grid">${vp.map(p => {
+      const cat = getCat(p.type);
+      const secretBadge = p.is_secret ? `<span class="badge badge-secret">🔒 비공개</span>` : '';
+      const delBtn = state.isAdmin ? `<button class="btn btn-coral btn-sm" onclick="confirmDelete(${p.id})">삭제</button>` : '';
+      return `<div class="post-card ${p.is_secret?'secret-card':''}">
+        <div class="card-top" style="background:linear-gradient(90deg,${cat.color},${cat.color}99)"></div>
+        <div class="card-body">
+          <div class="card-badges">
+            <span class="badge" style="background:${cat.color}22;color:${cat.color}">${esc(cat.label)}</span>
             ${secretBadge}
           </div>
-          <div class="post-title">${escHtml(p.title)}</div>
-          <div class="post-meta">
-            <span>${p.author_type === '익명' ? '익명' : escHtml(p.author)}</span>
-            <span class="meta-dot"></span>
-            <span>${formatDate(p.created_at)}</span>
+          <div class="card-title">${esc(p.title)}</div>
+          <div class="card-content">${esc(p.content)}</div>
+          <div class="card-footer">
+            <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
+            <div>${delBtn}</div>
           </div>
         </div>
-        ${deleteBtn}
-      </div>
-      <div class="post-content">${escHtml(p.content)}</div>
-    </div>
-  </div>`;
-}
-
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* ── Actions ── */
-function setTab(t) {
-  if (t === 'secret' && !state.isAdmin) return;
-  state.activeTab = t;
-  state.search = '';
-  render();
-}
-
-function setSearch(v) {
-  state.search = v;
-  renderApp();
-}
-
-function toggleWrite() {
-  state.showWrite = !state.showWrite;
-  render();
-}
-
-function onAuthorTypeChange() {
-  const sel = document.getElementById('wAuthorType');
-  const field = document.getElementById('authorNameField');
-  const lbl = document.getElementById('authorNameLabel');
-  if (!sel || !field) return;
-  if (sel.value === '익명') field.style.display = 'none';
-  else { field.style.display = 'block'; lbl.textContent = sel.value; }
-}
-
-function toggleSecret() {
-  const cb = document.getElementById('wSecret');
-  if (cb) { cb.checked = !cb.checked; updateSecretLabel(); }
-}
-
-function updateSecretLabel() {
-  const cb = document.getElementById('wSecret');
-  const lbl = document.getElementById('secretToggleLabel');
-  if (cb && lbl) lbl.classList.toggle('checked', cb.checked);
-}
-
-async function submitPost() {
-  const type = document.getElementById('wType')?.value;
-  const title = document.getElementById('wTitle')?.value?.trim();
-  const content = document.getElementById('wContent')?.value?.trim();
-  const authorType = document.getElementById('wAuthorType')?.value;
-  const authorName = document.getElementById('wAuthorName')?.value?.trim();
-  const isSecret = document.getElementById('wSecret')?.checked || false;
-
-  if (!title) { toast('제목을 입력해 주세요.'); return; }
-  if (!content) { toast('내용을 입력해 주세요.'); return; }
-
-  let author = '익명';
-  if (authorType !== '익명') {
-    if (!authorName) { toast('이름을 입력해 주세요.'); return; }
-    author = authorName;
+      </div>`;
+    }).join('')}</div>`;
   }
 
-  const btn = document.getElementById('submitBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '게시 중...'; }
+  el.innerHTML = `
+    ${statsHtml}${adminBarHtml}
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="검색..." value="${esc(state.search)}" oninput="setSearch(this.value)" />
+      </div>
+      <button class="btn btn-sky btn-lg" onclick="toggleWrite()">${state.showWrite?'✕ 닫기':'✏️ 글쓰기'}</button>
+    </div>
+    ${writeHtml}
+    <div class="tab-wrap">${tabHtml}</div>
+    ${postsHtml}`;
+}
 
+/* Actions */
+function setTab(t) { if(t==='secret'&&!state.isAdmin)return; state.activeTab=t; state.search=''; render(); }
+function setSearch(v) { state.search=v; renderApp(); }
+function toggleWrite() { state.showWrite=!state.showWrite; render(); }
+function onAuthorChange() {
+  const sel=document.getElementById('wAuthorType');
+  const f=document.getElementById('authorField');
+  const l=document.getElementById('authorLbl');
+  if(!sel||!f)return;
+  if(sel.value==='익명') f.style.display='none';
+  else { f.style.display='block'; l.textContent=sel.value; }
+}
+function toggleSecret() { const cb=document.getElementById('wSecret'); if(cb){cb.checked=!cb.checked;updateSecretStyle();} }
+function updateSecretStyle() { const cb=document.getElementById('wSecret'); const el=document.getElementById('secretToggle'); if(cb&&el)el.classList.toggle('on',cb.checked); }
+
+async function submitPost() {
+  const type=document.getElementById('wType')?.value;
+  const title=document.getElementById('wTitle')?.value?.trim();
+  const content=document.getElementById('wContent')?.value?.trim();
+  const authorType=document.getElementById('wAuthorType')?.value;
+  const authorName=document.getElementById('wAuthorName')?.value?.trim();
+  const isSecret=document.getElementById('wSecret')?.checked||false;
+  if(!title){toast('제목을 입력해 주세요!');return;}
+  if(!content){toast('내용을 입력해 주세요!');return;}
+  let author='익명';
+  if(authorType!=='익명'){if(!authorName){toast('이름을 입력해 주세요!');return;}author=authorName;}
+  const btn=document.getElementById('submitBtn');
+  if(btn){btn.disabled=true;btn.textContent='게시 중...';}
   try {
-    await insertPost({ type, title, content, author, author_type: authorType, is_secret: isSecret });
-    toast('게시물이 등록되었습니다.');
-    state.showWrite = false;
-    await fetchPosts();
-  } catch (e) {
-    console.error(e);
-    toast('게시에 실패했습니다. 다시 시도해 주세요.');
-    if (btn) { btn.disabled = false; btn.textContent = '게시하기'; }
+    await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
+    toast('게시물이 올라갔어요! 🎉');
+    state.showWrite=false; await fetchPosts();
+  } catch(e) {
+    toast('게시에 실패했어요.');
+    if(btn){btn.disabled=false;btn.textContent='🚀 게시하기';}
   }
 }
 
 function confirmDelete(id) {
-  openModal(`
-    <div class="modal-title">게시물 삭제</div>
-    <p style="font-size:13px;color:var(--txt2);line-height:1.6">이 게시물을 삭제하시겠습니까?<br>삭제 후 복구할 수 없습니다.</p>
+  openModal(`<div class="modal-title">🗑️ 게시물 삭제</div>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7">이 게시물을 삭제할까요?<br>삭제 후에는 되돌릴 수 없어요.</p>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal()">취소</button>
-      <button class="btn btn-danger" onclick="doDelete(${id})">삭제</button>
-    </div>
-  `);
+      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn btn-coral" onclick="doDelete(${id})">삭제하기</button>
+    </div>`);
 }
 
 async function doDelete(id) {
   closeModal();
-  try {
-    await deletePost(id);
-    toast('삭제되었습니다.');
-    await fetchPosts();
-  } catch (e) {
-    toast('삭제에 실패했습니다.');
-  }
+  try { await removePost(id); toast('삭제됐어요!'); await fetchPosts(); }
+  catch(e) { toast('삭제에 실패했어요.'); }
 }
 
-/* ── Admin Auth ── */
-function openAdminLogin() {
+/* Category manager */
+function openCatManager() {
+  const items = state.cats.map((c,i) => `
+    <div class="cat-item">
+      <div class="cat-dot" style="background:${c.color}"></div>
+      <span class="cat-name">${esc(c.label)}</span>
+      <span class="cat-key">${esc(c.key)}</span>
+      <button class="btn btn-coral btn-sm" onclick="removeCat(${i})">삭제</button>
+    </div>`).join('');
+
+  const colorOpts = COLORS.map(col =>
+    `<div class="color-opt ${state.newColor===col?'selected':''}" style="background:${col}" onclick="pickColor('${col}')"></div>`
+  ).join('');
+
   openModal(`
-    <div class="modal-title">관리자 로그인</div>
-    <div class="field">
-      <label>비밀번호</label>
-      <input type="password" id="adminPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')tryLogin()" autofocus />
+    <div class="modal-title">🏷️ 카테고리 관리</div>
+    <div class="cat-list">${items||'<div style="text-align:center;color:var(--txt3);font-size:13px;padding:1rem">카테고리가 없어요</div>'}</div>
+    <div style="border-top:2px solid var(--border);padding-top:1rem">
+      <div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">새 카테고리 추가</div>
+      <div class="row2" style="margin-bottom:10px">
+        <div class="field" style="margin:0"><label>이름</label><input type="text" id="nLabel" placeholder="예: 기도제목" maxlength="10"/></div>
+        <div class="field" style="margin:0"><label>키 (영문)</label><input type="text" id="nKey" placeholder="예: prayer" maxlength="20"/></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:6px">색상 선택</div>
+      <div class="color-options">${colorOpts}</div>
     </div>
-    <div class="error-msg" id="loginErr">비밀번호가 올바르지 않습니다.</div>
     <div class="modal-footer">
-      <button class="btn" onclick="closeModal()">취소</button>
-      <button class="btn btn-primary" onclick="tryLogin()">로그인</button>
+      <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
+      <button class="btn btn-mint" onclick="addCat()">➕ 추가</button>
+    </div>`, true);
+}
+
+function pickColor(col) { state.newColor=col; openCatManager(); }
+
+function removeCat(i) {
+  if(state.cats.length<=1){toast('카테고리는 최소 1개 필요해요!');return;}
+  state.cats.splice(i,1); saveCats(); toast('삭제했어요.');
+  openCatManager(); renderApp();
+}
+
+function addCat() {
+  const label=document.getElementById('nLabel')?.value?.trim();
+  const key=document.getElementById('nKey')?.value?.trim().toLowerCase().replace(/\s+/g,'_');
+  if(!label){toast('이름을 입력해 주세요!');return;}
+  if(!key){toast('키를 입력해 주세요! (영문)');return;}
+  if(state.cats.find(c=>c.key===key)){toast('이미 있는 키예요!');return;}
+  state.cats.push({key,label,color:state.newColor});
+  saveCats(); toast(`"${label}" 카테고리 추가됐어요! 🎉`);
+  openCatManager(); renderApp();
+}
+
+/* Admin */
+function openAdminLogin() {
+  openModal(`<div class="modal-title">👑 관리자 로그인</div>
+    <div class="field"><label>비밀번호</label>
+      <input type="password" id="adminPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')tryLogin()" />
     </div>
-    <div class="hint-box">관리자 전용 비밀번호를 입력하세요.</div>
-  `);
-  setTimeout(() => document.getElementById('adminPw')?.focus(), 50);
+    <div class="error-msg" id="loginErr">❌ 비밀번호가 틀렸어요!</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn btn-sky" onclick="tryLogin()">로그인</button>
+    </div>
+    <div class="hint-box">관리자 전용 비밀번호를 입력하세요.</div>`);
+  setTimeout(()=>document.getElementById('adminPw')?.focus(),50);
 }
 
 async function tryLogin() {
-  const pw = document.getElementById('adminPw')?.value;
-  if (pw === ADMIN_PW) {
-    state.isAdmin = true;
-    sessionStorage.setItem('isAdmin', 'true');
-    closeModal();
-    toast('관리자로 로그인했습니다.');
+  const pw=document.getElementById('adminPw')?.value;
+  if(pw===ADMIN_PW){
+    state.isAdmin=true; sessionStorage.setItem('isAdmin','true');
+    closeModal(); toast('관리자로 로그인했어요! 👑');
     await fetchPosts();
   } else {
-    const err = document.getElementById('loginErr');
-    if (err) err.style.display = 'block';
+    const err=document.getElementById('loginErr');
+    if(err)err.style.display='block';
   }
 }
 
 function logout() {
-  state.isAdmin = false;
-  sessionStorage.removeItem('isAdmin');
-  if (state.activeTab === 'secret') state.activeTab = 'all';
-  toast('로그아웃했습니다.');
-  fetchPosts();
+  state.isAdmin=false; sessionStorage.removeItem('isAdmin');
+  if(state.activeTab==='secret')state.activeTab='all';
+  toast('로그아웃됐어요!'); fetchPosts();
 }
 
-/* ── Modal ── */
-function openModal(html) {
-  const area = document.getElementById('modalArea');
-  area.innerHTML = `<div class="modal-backdrop" onclick="handleBackdropClick(event)"><div class="modal">${html}</div></div>`;
+/* Modal */
+function openModal(html,large=false) {
+  document.getElementById('modalArea').innerHTML=
+    `<div class="modal-backdrop" onclick="handleBd(event)"><div class="modal ${large?'modal-lg':''}">${html}</div></div>`;
 }
-function closeModal() { document.getElementById('modalArea').innerHTML = ''; }
-function handleBackdropClick(e) { if (e.target === e.currentTarget) closeModal(); }
+function closeModal(){document.getElementById('modalArea').innerHTML='';}
+function handleBd(e){if(e.target===e.currentTarget)closeModal();}
 
-/* ── Init ── */
 fetchPosts();
 </script>
 </body>
