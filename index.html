@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -35,7 +36,7 @@
 }
 
 body {
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans KR','Inter',sans-serif;
   background: var(--cream);
   color: var(--txt);
   font-size: 14px;
@@ -132,7 +133,7 @@ body {
   color: var(--sky-dark);
   font-size: 50px;
 }
-.hero-board {
+.hero-board { font-size:20px;
   font-family: 'DM Serif Display', serif;
   font-size: 22px;
   color: var(--txt2);
@@ -263,7 +264,7 @@ body {
 .card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 9px; }
 .badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .badge-secret { background: var(--peach-light); color: var(--peach-dark); border: 1px solid var(--peach-mid); }
-.card-title { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 8px; line-height: 1.45; font-family: 'Noto Sans KR', sans-serif; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 8px; line-height: 1.45; font-family: 'Noto Sans KR','Inter',sans-serif; }
 .card-content { font-size: 13px; color: var(--txt2); line-height: 1.65; flex: 1; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1.5px solid var(--border); }
 .card-meta { font-size: 11px; color: var(--txt3); font-weight: 500; }
@@ -334,7 +335,7 @@ body {
   .row2 { grid-template-columns: 1fr; }
   .hero-mu, .hero-mul { font-size: 34px; }
   .hero-mu em, .hero-mul em { font-size: 40px; }
-  .hero-board { font-size: 18px; }
+  .hero-board { font-size:20px; font-size: 18px; }
   .container { padding: 1.25rem 1rem; }
 }
 </style>
@@ -385,7 +386,7 @@ const DEFAULT_CATS = [
 ];
 
 const COLORS = ['#7ab3cc','#e07d5a','#a8cedd','#eba98e','#b5a4c8','#84bfa8','#e8b86d','#c98ca0','#8fb9a8','#d4956a'];
-const ICONS = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛'];
+const ICONS = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛','🔥','🎯','📚','🧠','💭','🎈','🪴','🌈','🧩','🕯️','🎤','🎧'];
 
 let state = {
   isAdmin: sessionStorage.getItem('isAdmin') === 'true',
@@ -604,6 +605,15 @@ function renderApp() {
           <div class="card-footer">
             <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
             ${delBtn}
+<div style="margin-top:6px;font-size:12px">
+👍 ${reactions[p.id]?.likes||0}
+<button class="btn btn-sm" onclick="likePost(${p.id})">좋아요</button>
+<button class="btn btn-sm" onclick="addComment(${p.id})">댓글</button>
+</div>
+<div style="font-size:12px;margin-top:5px">
+${(reactions[p.id]?.comments||[]).map((c,i)=>`
+<div>💬 ${c} ${state.isAdmin?`<button onclick="delComment(${p.id},${i})">❌</button>`:''}</div>`).join('')}
+</div>
           </div>
         </div>
       </div>`;
@@ -653,7 +663,30 @@ async function submitPost() {
   try {
     await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
     toast('게시물이 올라갔어요! 🎉');
-    state.showWrite=false; await fetchPosts();
+    state.showWrite=false; await 
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
+
+fetchPosts();
   } catch(e) {
     toast('게시에 실패했어요.');
     if(btn){btn.disabled=false;btn.textContent='게시하기 →';}
@@ -670,7 +703,30 @@ function confirmDelete(id) {
 }
 async function doDelete(id) {
   closeModal();
-  try { await removePost(id); toast('삭제됐어요.'); await fetchPosts(); }
+  try { await removePost(id); toast('삭제됐어요.'); await 
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
+
+fetchPosts(); }
   catch(e) { toast('삭제에 실패했어요.'); }
 }
 
@@ -710,8 +766,8 @@ function openCatManager() {
     </div>`, true);
 }
 
-function pickColor(col) { state.newColor=col; openCatManager(); }
-function pickIcon(ic) { state.newIcon=ic; openCatManager(); }
+function pickColor(col) { state.newColor=col; document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected')); event.target.classList.add('selected'); }
+function pickIcon(ic) { state.newIcon=ic; document.querySelectorAll('.icon-opt').forEach(e=>e.classList.remove('selected')); event.target.classList.add('selected'); }
 
 function removeCat(i) {
   if(state.cats.length<=1){toast('카테고리는 최소 1개 필요해요!');return;}
@@ -750,7 +806,30 @@ async function tryLogin() {
   if(pw===ADMIN_PW){
     state.isAdmin=true; sessionStorage.setItem('isAdmin','true');
     closeModal(); toast('관리자로 로그인했어요 👑');
-    await fetchPosts();
+    await 
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
+
+fetchPosts();
   } else {
     const err=document.getElementById('loginErr');
     if(err)err.style.display='block';
@@ -760,7 +839,30 @@ async function tryLogin() {
 function logout() {
   state.isAdmin=false; sessionStorage.removeItem('isAdmin');
   if(state.activeTab==='secret')state.activeTab='all';
-  toast('로그아웃됐어요.'); fetchPosts();
+  toast('로그아웃됐어요.'); 
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
+
+fetchPosts();
 }
 
 /* ── Modal ── */
@@ -770,6 +872,29 @@ function openModal(html,large=false) {
 }
 function closeModal(){document.getElementById('modalArea').innerHTML='';}
 function handleBd(e){if(e.target===e.currentTarget)closeModal();}
+
+
+let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
+function saveReactions(){ localStorage.setItem('reactions',JSON.stringify(reactions)); }
+
+function likePost(id){
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].likes++;
+  saveReactions(); render();
+}
+
+function addComment(id){
+  const text=prompt('댓글 입력');
+  if(!text) return;
+  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
+  reactions[id].comments.push(text);
+  saveReactions(); render();
+}
+
+function delComment(id,i){
+  reactions[id].comments.splice(i,1);
+  saveReactions(); render();
+}
 
 fetchPosts();
 </script>
