@@ -47,6 +47,86 @@ function delComment(id,i){
   render();
 }
 
+
+function toggleMoreComments(postId){
+  const extra = document.getElementById('extra-comments-' + postId);
+  const btn = document.getElementById('toggle-comments-' + postId);
+  if(!extra || !btn) return;
+  const isHidden = extra.style.display === 'none' || extra.style.display === '';
+  extra.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '댓글 접기' : '댓글 더보기';
+}
+
+
+function applyThreeColBoard(){
+  const grid = document.querySelector('#app .posts-grid');
+  if(!grid) return;
+  const cards = Array.from(document.querySelectorAll('#app .post-card'));
+  const w = window.innerWidth;
+
+  if(w >= 1100){
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '320px 320px 320px';
+    grid.style.gap = '16px';
+    grid.style.justifyContent = 'center';
+    grid.style.alignItems = 'start';
+    grid.style.width = '992px';
+    grid.style.maxWidth = '992px';
+    grid.style.margin = '0 auto';
+    cards.forEach(card => {
+      card.style.width = '320px';
+      card.style.minWidth = '320px';
+      card.style.maxWidth = '320px';
+      card.style.height = '430px';
+      card.style.minHeight = '430px';
+      card.style.margin = '0';
+      card.style.flex = 'none';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.overflow = 'hidden';
+    });
+  }else if(w >= 701){
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '320px 320px';
+    grid.style.gap = '16px';
+    grid.style.justifyContent = 'center';
+    grid.style.alignItems = 'start';
+    grid.style.width = '656px';
+    grid.style.maxWidth = '656px';
+    grid.style.margin = '0 auto';
+    cards.forEach(card => {
+      card.style.width = '320px';
+      card.style.minWidth = '320px';
+      card.style.maxWidth = '320px';
+      card.style.height = '430px';
+      card.style.minHeight = '430px';
+      card.style.margin = '0';
+      card.style.flex = 'none';
+      card.style.display = 'flex';
+      card.style.flexDirection = 'column';
+      card.style.overflow = 'hidden';
+    });
+  }else{
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gap = '14px';
+    grid.style.width = '100%';
+    grid.style.maxWidth = '100%';
+    grid.style.margin = '0 auto';
+    cards.forEach(card => {
+      card.style.width = '100%';
+      card.style.minWidth = '0';
+      card.style.maxWidth = '100%';
+      card.style.height = 'auto';
+      card.style.minHeight = 'auto';
+      card.style.margin = '0';
+      card.style.flex = 'none';
+      card.style.overflow = 'hidden';
+    });
+  }
+}
+window.addEventListener('resize', applyThreeColBoard);
+
 </script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -291,8 +371,9 @@ body {
 .write-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1.5px solid var(--border); }
 
 /* ── Grid ── */
-.posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.posts-grid { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; align-items:flex-start; }
 .post-card {
+  width:300px; max-width:300px; flex:0 0 300px; min-height:430px;
   background: white; border: 1.5px solid var(--border);
   border-radius: var(--r); overflow: hidden;
   box-shadow: var(--shadow); transition: all 0.22s;
@@ -372,14 +453,119 @@ body {
 /* ── Responsive ── */
 @media (max-width: 680px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .posts-grid { grid-template-columns: 1fr; }
+  .posts-grid { display:flex; flex-direction:column; gap:14px; }
+  .post-card { width:100%; max-width:100%; flex:none; }
   .row2 { grid-template-columns: 1fr; }
   .hero-mu, .hero-mul { font-size: 34px; }
   .hero-mu em, .hero-mul em { font-size: 40px; }
   .hero-board { font-size: 18px; }
   .container { padding: 1.25rem 1rem; }
 }
+
+.comment-more-btn {
+  background: transparent;
+  border: none;
+  color: var(--txt3);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.comment-more-btn:hover {
+  color: var(--txt2);
+  text-decoration: underline;
+}
 </style>
+
+<style id="hard-three-col-board">
+/* 데스크톱에서는 카드 3개가 한 줄에 딱 들어가도록 강제 */
+@media (min-width: 1100px){
+  main.container{
+    max-width: 1120px !important;
+  }
+  main.container #app .posts-grid{
+    display:grid !important;
+    grid-template-columns: 320px 320px 320px !important;
+    gap:16px !important;
+    justify-content:center !important;
+    align-items:start !important;
+    width:992px !important;
+    max-width:992px !important;
+    margin:0 auto !important;
+  }
+  main.container #app .post-card{
+    width:320px !important;
+    min-width:320px !important;
+    max-width:320px !important;
+    height:430px !important;
+    min-height:430px !important;
+    margin:0 !important;
+    flex:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+  }
+  main.container #app .post-card .card-body{
+    display:flex !important;
+    flex-direction:column !important;
+    min-height:0 !important;
+    height:100% !important;
+  }
+}
+
+/* 태블릿은 2열 */
+@media (min-width: 701px) and (max-width: 1099px){
+  main.container #app .posts-grid{
+    display:grid !important;
+    grid-template-columns: 320px 320px !important;
+    gap:16px !important;
+    justify-content:center !important;
+    align-items:start !important;
+    width:656px !important;
+    max-width:656px !important;
+    margin:0 auto !important;
+  }
+  main.container #app .post-card{
+    width:320px !important;
+    min-width:320px !important;
+    max-width:320px !important;
+    height:430px !important;
+    min-height:430px !important;
+    margin:0 !important;
+    flex:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    overflow:hidden !important;
+  }
+  main.container #app .post-card .card-body{
+    display:flex !important;
+    flex-direction:column !important;
+    min-height:0 !important;
+    height:100% !important;
+  }
+}
+
+/* 모바일은 1열 */
+@media (max-width: 700px){
+  main.container #app .posts-grid{
+    display:grid !important;
+    grid-template-columns: 1fr !important;
+    gap:14px !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 auto !important;
+  }
+  main.container #app .post-card{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    height:auto !important;
+    min-height:auto !important;
+    margin:0 !important;
+    flex:none !important;
+  }
+}
+</style>
+
 </head>
 <body>
 
@@ -477,7 +663,7 @@ function hexAlpha(hex, a) {
 /* ── Supabase ── */
 function showSetupError() {
   document.getElementById('app').innerHTML = `<div class="setup-error">
-    <div style="font-size:16px;font-weight:700;color:#b91c1c;margin-bottom:8px">⚠️ 테이블 설정이 필요해요</div>
+    <div style="font-size:17px;font-weight:700;color:#b91c1c;margin-bottom:8px">⚠️ 테이블 설정이 필요해요</div>
     <p style="font-size:13px;color:var(--txt2);line-height:1.7">Supabase SQL Editor에서 아래 SQL을 실행해 주세요.</p>
     <pre>create table posts (
   id bigint generated always as identity primary key,
@@ -644,9 +830,10 @@ function renderApp() {
           <div class="card-title">${esc(p.title)}</div>
           <div class="card-content">${esc(p.content)}</div>
           <div class="card-footer">
-            <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
+            <div class="card-meta"></div>
             ${delBtn}
-<div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee">
+          </div>
+<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e7e2dd;width:100%;box-sizing:border-box;">
 
 <div style="margin-bottom:8px;font-size:13px">
 👍 ${reactions[p.id]?.likes||0}
@@ -655,64 +842,111 @@ ${myLikes[p.id]?'취소':'좋아요'}
 </button>
 </div>
 
-<div style="display:flex;align-items:center;gap:6px;background:#f5f5f5;border-radius:10px;padding:6px 10px;margin-bottom:8px;">
-<span style="font-size:14px;opacity:0.6">✏️</span>
-<textarea id="cinput-${p.id}" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); addComment(${p.id}); }" placeholder="댓글을 남겨보세요"
-style="
-width:100%;
-border:none;
-outline:none;
-resize:none;
-background:transparent;
-font-size:14px;
-line-height:1.4;
-min-height:60px;
-
-onkeydown="if(event.key==='Enter') addComment(${p.id})"/>
+<div style="
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  margin-top:0;
+  margin-bottom:0;
+  min-height:52px;
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:0 16px;
+  background:#f3f3f3;
+  border-top:1px solid #e3e3e3;
+">
+  <span style="
+    font-size:18px;
+    color:#c8c8c8;
+    line-height:1;
+    flex-shrink:0;
+  ">🪽</span>
+  <textarea
+    id="cinput-${p.id}"
+    placeholder="댓글 작성"
+    style="
+      flex:1;
+      width:100%;
+      border:none;
+      outline:none;
+      background:transparent;
+      font-size:10px;
+      font-weight:700;
+      color:#8c8c8c;
+      letter-spacing:-0.02em;
+      resize:none;
+      overflow:hidden;
+      line-height:1.45;
+      min-height:24px;
+      padding:0;
+      margin:0;
+    "
+    rows="1"
+    oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
+    onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); addComment(${p.id}); }"
+  ></textarea>
 </div>
 
-<div style="font-size:12px">
-${(reactions[p.id]?.comments||[]).map((c,i)=>`
-  <div style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;">
-
-    <!-- 연결선 -->
-    <div style="
-      width:2px;
-      background:#e5e7eb;
-      border-radius:2px;
-      margin-left:4px;
-    "></div>
-
-    <!-- 댓글 카드 -->
-    <div style="
-      flex:1;
-      background:#ffffff;
-      border-radius:14px;
-      padding:10px 12px;
-      border:1px solid #e5e7eb;
-      box-shadow:0 1px 2px rgba(0,0,0,0.04);
-      margin-left:0;
-    ">
-
-      <div style="font-size:11px;opacity:0.5;margin-bottom:4px">
-        익명
+<div style="font-size:12px;width:100%;">
+${(() => {
+  const comments = reactions[p.id]?.comments || [];
+  const renderComment = (c, i) => `
+    <div style="width:100%;box-sizing:border-box;padding:8px 12px;border-top:1px solid #ececec;background:#fcfcfc;">
+      <div style="
+        width:100%;
+        max-width:100%;
+        box-sizing:border-box;
+        display:block;
+        background:#ffffff;
+        border:1px solid #e7e7e7;
+        border-radius:16px;
+        padding:10px 12px;
+        box-shadow:0 1px 2px rgba(61,46,36,0.04);
+      ">
+        <div style="
+          display:flex;
+          align-items:flex-start;
+          gap:8px;
+          width:100%;
+          max-width:100%;
+          box-sizing:border-box;
+          font-size:10px;
+          line-height:1.5;
+          color:#4b3a31;
+          font-weight:600;
+        ">
+          <span style="font-size:16px;opacity:0.7;">💬</span>
+          <span style="display:block;flex:1;white-space:normal;word-break:break-word;">${c}</span>
+        </div>
+        ${state.isAdmin ? `
+        <div style="text-align:right;margin-top:8px">
+          <button onclick="delComment(${p.id},${i})" style="
+            font-size:12px;
+            opacity:0.55;
+            border:none;
+            background:transparent;
+            cursor:pointer;
+            color:#8b6f61;
+          ">삭제</button>
+        </div>` : ''}
       </div>
-
-      <div style="font-size:13px;line-height:1.4">
-        💬 ${c}
-      </div>
-
-      ${state.isAdmin ? `
-      <div style="text-align:right;margin-top:4px">
-        <button onclick="delComment(${p.id},${i})" style="font-size:11px;opacity:0.6">
-          삭제
-        </button>
-      </div>` : ''}
-
     </div>
-
-  </div>
-`).join('')}
+  `;
+  return `
+    <div style="font-size:12px;width:100%;">
+      ${comments[0] ? renderComment(comments[0], 0) : ''}
+      <div id="extra-comments-${p.id}" style="display:none;">
+        ${comments.slice(1).map((c, idx) => renderComment(c, idx + 1)).join('')}
+      </div>
+      ${comments.length > 1 ? `
+        <div style="padding:8px 12px;background:#fcfcfc;border-top:1px solid #ececec;">
+          <button id="toggle-comments-${p.id}" class="comment-more-btn" onclick="toggleMoreComments(${p.id})">댓글 더보기</button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+})()}
 </div>
 
 </div>
@@ -734,6 +968,7 @@ ${(reactions[p.id]?.comments||[]).map((c,i)=>`
     ${writeHtml}
     <div class="tab-wrap">${tabHtml}</div>
     ${postsHtml}`;
+  setTimeout(applyThreeColBoard, 0);
 }
 
 /* ── Actions ── */
@@ -923,6 +1158,16 @@ function delComment(id,i){
   reactions[id].comments.splice(i,1);
   saveReactions();
   render();
+}
+
+
+function toggleMoreComments(postId){
+  const extra = document.getElementById('extra-comments-' + postId);
+  const btn = document.getElementById('toggle-comments-' + postId);
+  if(!extra || !btn) return;
+  const isHidden = extra.style.display === 'none' || extra.style.display === '';
+  extra.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? '댓글 접기' : '댓글 더보기';
 }
 
 </script>
