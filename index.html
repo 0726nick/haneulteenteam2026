@@ -5,567 +5,200 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mu엇이든 Mul어 Board</title>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-/* reactions */
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
-
-function saveReactions(){
-  localStorage.setItem('reactions',JSON.stringify(reactions));
-  localStorage.setItem('myLikes',JSON.stringify(myLikes));
-}
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-
-  if(myLikes[id]){
-    reactions[id].likes = Math.max(0, reactions[id].likes-1);
-    delete myLikes[id];
-  } else {
-    reactions[id].likes++;
-    myLikes[id]=true;
-  }
-  saveReactions();
-  render();
-}
-
-function addComment(id){
-  const input = document.getElementById('cinput-'+id);
-  const text = input.value.trim();
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  input.value='';
-  saveReactions();
-  render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions();
-  render();
-}
-
-
-function toggleMoreComments(postId){
-  const extra = document.getElementById('extra-comments-' + postId);
-  const btn = document.getElementById('toggle-comments-' + postId);
-  if(!extra || !btn) return;
-  const isHidden = extra.style.display === 'none' || extra.style.display === '';
-  extra.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? '댓글 접기' : '댓글 더보기';
-}
-
-
-function applyThreeColBoard(){
-  const grid = document.querySelector('#app .posts-grid');
-  if(!grid) return;
-  const cards = Array.from(document.querySelectorAll('#app .post-card'));
-  const w = window.innerWidth;
-
-  if(w >= 1100){
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = '320px 320px 320px';
-    grid.style.gap = '16px';
-    grid.style.justifyContent = 'center';
-    grid.style.alignItems = 'start';
-    grid.style.width = '992px';
-    grid.style.maxWidth = '992px';
-    grid.style.margin = '0 auto';
-    cards.forEach(card => {
-      card.style.width = '320px';
-      card.style.minWidth = '320px';
-      card.style.maxWidth = '320px';
-      card.style.height = '430px';
-      card.style.minHeight = '430px';
-      card.style.margin = '0';
-      card.style.flex = 'none';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.overflow = 'hidden';
-    });
-  }else if(w >= 701){
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = '320px 320px';
-    grid.style.gap = '16px';
-    grid.style.justifyContent = 'center';
-    grid.style.alignItems = 'start';
-    grid.style.width = '656px';
-    grid.style.maxWidth = '656px';
-    grid.style.margin = '0 auto';
-    cards.forEach(card => {
-      card.style.width = '320px';
-      card.style.minWidth = '320px';
-      card.style.maxWidth = '320px';
-      card.style.height = '430px';
-      card.style.minHeight = '430px';
-      card.style.margin = '0';
-      card.style.flex = 'none';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.overflow = 'hidden';
-    });
-  }else{
-    grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = '1fr';
-    grid.style.gap = '14px';
-    grid.style.width = '100%';
-    grid.style.maxWidth = '100%';
-    grid.style.margin = '0 auto';
-    cards.forEach(card => {
-      card.style.width = '100%';
-      card.style.minWidth = '0';
-      card.style.maxWidth = '100%';
-      card.style.height = 'auto';
-      card.style.minHeight = 'auto';
-      card.style.margin = '0';
-      card.style.flex = 'none';
-      card.style.overflow = 'hidden';
-    });
-  }
-}
-window.addEventListener('resize', applyThreeColBoard);
-
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sky:#7ab3cc;--sky-light:#e8f2f7;--sky-mid:#a8cedd;--sky-dark:#4d8aa8;
+  --peach:#e07d5a;--peach-light:#fdf0eb;--peach-mid:#eba98e;--peach-dark:#c4613c;
+  --cream:#fdf8f3;--warm:#f5ede4;--warm2:#ede0d4;
+  --border:#e8ddd4;--border2:#d9ccc0;
+  --txt:#3d2e24;--txt2:#7a6458;--txt3:#b09e94;
+  --r:18px;--r-sm:12px;
+  --shadow:0 2px 10px rgba(61,46,36,.07);
+  --shadow-md:0 6px 24px rgba(61,46,36,.10);
+  --shadow-lg:0 14px 44px rgba(61,46,36,.13);
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--txt);font-size:14px;line-height:1.65;min-height:100vh}
 
-:root {
-  --sky: #7ab3cc;
-  --sky-light: #e8f2f7;
-  --sky-mid: #a8cedd;
-  --sky-dark: #4d8aa8;
-  --peach: #e07d5a;
-  --peach-light: #fdf0eb;
-  --peach-mid: #eba98e;
-  --peach-dark: #c4613c;
-  --cream: #fdf8f3;
-  --warm: #f5ede4;
-  --warm2: #ede0d4;
-  --border: #e8ddd4;
-  --border2: #d9ccc0;
-  --txt: #3d2e24;
-  --txt2: #7a6458;
-  --txt3: #b09e94;
-  --r: 18px;
-  --r-sm: 12px;
-  --r-xs: 7px;
-  --shadow: 0 2px 10px rgba(61,46,36,0.07);
-  --shadow-md: 0 6px 24px rgba(61,46,36,0.10);
-  --shadow-lg: 0 14px 44px rgba(61,46,36,0.13);
-}
+/* Header */
+.header{background:rgba(253,248,243,.94);backdrop-filter:blur(12px);border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 2px 14px rgba(61,46,36,.06)}
+.header-inner{max-width:1080px;margin:0 auto;padding:0 1.5rem;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--sky),var(--sky-dark));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 8px rgba(74,138,168,.28)}
+.logo-text{font-family:'Gowun Dodum',serif;font-size:15px;color:var(--txt);line-height:1.2}
+.logo-text span{color:var(--peach)}
+.header-right{display:flex;align-items:center;gap:8px}
 
-body {
-  font-family: 'Noto Sans KR','Inter',sans-serif;
-  background: var(--cream);
-  color: var(--txt);
-  font-size: 14px;
-  line-height: 1.65;
-  min-height: 100vh;
-}
+/* Hero */
+.hero{background:linear-gradient(160deg,#c8dfe8 0%,#daeaf2 30%,#f5e8df 70%,#f0d9cc 100%);padding:3rem 1.5rem 2.75rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 15% 80%,rgba(224,125,90,.12) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 85% 20%,rgba(122,179,204,.18) 0%,transparent 60%)}
+.hero-inner{position:relative;max-width:640px;margin:0 auto}
+.hero-eyebrow{font-family:'Gowun Dodum',serif;font-size:12px;letter-spacing:.14em;color:var(--sky-dark);text-transform:uppercase;margin-bottom:18px;opacity:.8}
+.hero-main{font-family:'Gowun Dodum',serif;font-size:40px;color:var(--txt);letter-spacing:-.5px;line-height:1.2;margin-bottom:10px}
+.hero-main .hi-peach{color:var(--peach)}
+.hero-main .hi-sky{color:var(--sky-dark)}
+.hero-main .board{font-size:28px;color:var(--txt2);opacity:.7;margin-left:6px}
+.hero-sub{font-family:'Gowun Dodum',serif;font-size:13px;color:var(--txt3);letter-spacing:.04em}
 
-/* ── Header ── */
-.header {
-  background: rgba(253,248,243,0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1.5px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 2px 14px rgba(61,46,36,0.06);
-}
-.header-inner {
-  max-width: 1080px; margin: 0 auto;
-  padding: 0 1.5rem; height: 60px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none;
-}
-.logo-mark {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--sky), var(--sky-dark));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; box-shadow: 0 3px 8px rgba(74,138,168,0.28);
-}
-.logo-text {
-  font-family: 'Gowun Dodum', serif;
-  font-size: 15px; color: var(--txt); letter-spacing: -0.2px;
-  line-height: 1.2;
-}
-.logo-text span { color: var(--peach); font-weight: 700; }
-.header-right { display: flex; align-items: center; gap: 8px; }
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r-sm);font-size:13px;font-family:inherit;font-weight:600;cursor:pointer;border:none;transition:all .18s;white-space:nowrap}
+.btn-sky{background:var(--sky);color:white;box-shadow:0 3px 10px rgba(122,179,204,.4)}
+.btn-sky:hover{background:var(--sky-dark);transform:translateY(-1px)}
+.btn-peach{background:var(--peach);color:white;box-shadow:0 3px 10px rgba(224,125,90,.35)}
+.btn-peach:hover{background:var(--peach-dark);transform:translateY(-1px)}
+.btn-outline{background:white;color:var(--txt2);border:1.5px solid var(--border2)}
+.btn-outline:hover{background:var(--warm);border-color:var(--peach-mid);color:var(--peach-dark)}
+.btn-ghost{background:transparent;color:var(--txt3);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--warm);color:var(--txt2);border-color:var(--border2)}
+.btn-danger{background:#fdecea;color:#b91c1c;border:1.5px solid #fca5a5}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-lg{padding:11px 24px;font-size:14px;border-radius:var(--r)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none!important}
 
-/* ── Hero ── */
-.hero {
-  background: linear-gradient(160deg, #c8dfe8 0%, #daeaf2 30%, #f5e8df 70%, #f0d9cc 100%);
-  padding: 3.5rem 1.5rem 3rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.hero::before {
-  content: '';
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 60% 40% at 15% 80%, rgba(224,125,90,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 85% 20%, rgba(122,179,204,0.18) 0%, transparent 60%);
-}
-.hero-inner { position: relative; max-width: 640px; margin: 0 auto; }
-.hero-eyebrow {
-  font-size: 12px; font-weight: 500; letter-spacing: 0.16em;
-  color: var(--sky-dark); text-transform: uppercase;
-  margin-bottom: 14px; opacity: 0.85;
-}
-.hero-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 13px;
-  color: var(--txt2);
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
-  font-style: italic;
-  opacity: 0.7;
-}
-.hero-main {
-  display: flex; align-items: baseline; justify-content: center;
-  gap: 2px; flex-wrap: wrap; margin-bottom: 16px;
-}
-.hero-mu {
-  font-family: 'Gowun Dodum', serif;
-  font-size: 42px;
-  color: var(--txt);
-  letter-spacing: -1px;
-  line-height: 1.1;
-}
-.hero-mu em {
-  font-style: normal;
-  color: var(--peach);
-  font-size: 50px;
-}
-.hero-mul {
-  font-family: 'Gowun Dodum', serif;
-  font-size: 42px;
-  color: var(--txt);
-  letter-spacing: -1px;
-  line-height: 1.1;
-}
-.hero-mul em {
-  font-style: normal;
-  color: var(--sky-dark);
-  font-size: 50px;
-}
-.hero-board {
-  font-family: 'DM Serif Display', serif;
-  font-size: 22px;
-  color: var(--txt2);
-  font-style: italic;
-  margin-left: 8px;
-  opacity: 0.75;
-  align-self: flex-end;
-  padding-bottom: 6px;
-}
-.hero-church {
-  font-size: 13px; color: var(--txt3); font-weight: 500;
-  letter-spacing: 0.04em;
-}
-.hero-church strong { color: var(--txt2); font-weight: 700; }
+/* Container */
+.container{max-width:1080px;margin:0 auto;padding:1.75rem 1.5rem}
 
-/* ── Buttons ── */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 16px; border-radius: var(--r-sm);
-  font-size: 13px; font-family: inherit; font-weight: 600;
-  cursor: pointer; border: none; transition: all 0.18s; white-space: nowrap;
-}
-.btn-sky { background: var(--sky); color: white; box-shadow: 0 3px 10px rgba(122,179,204,0.4); }
-.btn-sky:hover { background: var(--sky-dark); transform: translateY(-1px); box-shadow: 0 5px 14px rgba(77,138,168,0.4); }
-.btn-peach { background: var(--peach); color: white; box-shadow: 0 3px 10px rgba(224,125,90,0.35); }
-.btn-peach:hover { background: var(--peach-dark); transform: translateY(-1px); }
-.btn-outline { background: white; color: var(--txt2); border: 1.5px solid var(--border2); }
-.btn-outline:hover { background: var(--warm); border-color: var(--peach-mid); color: var(--peach-dark); }
-.btn-ghost { background: transparent; color: var(--txt3); border: 1.5px solid var(--border); }
-.btn-ghost:hover { background: var(--warm); color: var(--txt2); border-color: var(--border2); }
-.btn-danger { background: #fdecea; color: #b91c1c; border: 1.5px solid #fca5a5; }
-.btn-danger:hover { background: #fee2e2; }
-.btn-sm { padding: 5px 11px; font-size: 12px; }
-.btn-lg { padding: 11px 24px; font-size: 14px; border-radius: var(--r); }
-.btn[disabled] { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat{background:white;border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);border:1.5px solid var(--border);display:flex;align-items:center;gap:12px;transition:transform .18s,box-shadow .18s}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.stat-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.stat-label{font-size:11px;color:var(--txt3);font-weight:600;letter-spacing:.04em;margin-bottom:2px}
+.stat-value{font-family:'Gowun Dodum',serif;font-size:24px;color:var(--txt);line-height:1}
 
-/* ── Container ── */
-.container { max-width: 1080px; margin: 0 auto; padding: 1.75rem 1.5rem; }
+/* Admin bar */
+.admin-bar{background:linear-gradient(135deg,#fef9ec,#fef3d8);border:1.5px solid #f5d67a;border-radius:var(--r);padding:10px 16px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between}
+.admin-label{font-size:13px;color:#92400e;font-weight:600}
 
-/* ── Stats ── */
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-.stat {
-  background: white; border-radius: var(--r); padding: 16px 18px;
-  box-shadow: var(--shadow); border: 1.5px solid var(--border);
-  display: flex; align-items: center; gap: 12px;
-  transition: transform 0.18s, box-shadow 0.18s;
-}
-.stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.stat-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
-.stat-label { font-size: 11px; color: var(--txt3); font-weight: 600; letter-spacing: 0.04em; margin-bottom: 2px; }
-.stat-value { font-size: 24px; font-weight: 700; color: var(--txt); line-height: 1; font-family: 'Gowun Dodum', serif; }
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:180px;position:relative}
+.search-wrap input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:white;font-family:inherit;font-size:13px;color:var(--txt);outline:none;transition:all .18s;font-weight:500}
+.search-wrap input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(122,179,204,.18)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px}
 
-/* ── Admin bar ── */
-.admin-bar {
-  background: linear-gradient(135deg, #fef9ec, #fef3d8);
-  border: 1.5px solid #f5d67a; border-radius: var(--r); padding: 10px 16px;
-  margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;
-}
-.admin-label { font-size: 13px; color: #92400e; font-weight: 600; }
+/* Tabs */
+.tab-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem}
+.tab{padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:white;color:var(--txt2);transition:all .18s;font-family:inherit}
+.tab:hover{border-color:var(--sky-mid);color:var(--sky-dark);background:var(--sky-light)}
+.tab.active{background:var(--sky);color:white;border-color:var(--sky);box-shadow:0 3px 10px rgba(122,179,204,.35)}
+.tab-secret{border-color:#f5d67a!important;color:#92400e!important}
+.tab-secret.active{background:#f5d67a!important;color:#92400e!important;border-color:#f5d67a!important;box-shadow:0 3px 8px rgba(245,214,122,.4)!important}
 
-/* ── Toolbar ── */
-.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; }
-.search-wrap { flex: 1; min-width: 180px; position: relative; }
-.search-wrap input {
-  width: 100%; padding: 10px 14px 10px 38px;
-  border: 1.5px solid var(--border2); border-radius: var(--r-sm);
-  background: white; font-family: inherit; font-size: 13px;
-  color: var(--txt); outline: none; transition: all 0.18s; font-weight: 500;
-}
-.search-wrap input:focus { border-color: var(--sky); box-shadow: 0 0 0 3px rgba(122,179,204,0.18); }
-.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+/* Write panel */
+.write-panel{background:white;border:1.5px solid var(--border2);border-radius:var(--r);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-md);animation:slideDown .22s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.write-title{font-family:'Gowun Dodum',serif;font-size:17px;margin-bottom:1.25rem;color:var(--txt)}
+.field{margin-bottom:13px}
+.field label{font-size:12px;color:var(--txt2);font-weight:600;display:block;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--r-sm);background:var(--warm);font-family:inherit;font-size:13px;color:var(--txt);outline:none;transition:all .18s;font-weight:500}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--sky);background:white;box-shadow:0 0 0 3px rgba(122,179,204,.14)}
+.field textarea{resize:vertical;min-height:100px;line-height:1.7}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.secret-toggle{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border2);cursor:pointer;font-size:13px;color:var(--txt2);font-weight:600;transition:all .18s;user-select:none;background:var(--warm)}
+.secret-toggle:hover,.secret-toggle.on{border-color:var(--peach-mid);color:var(--peach-dark);background:var(--peach-light)}
+.secret-toggle input{width:14px;height:14px;accent-color:var(--peach)}
+.write-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1.5px solid var(--border)}
 
-/* ── Tabs ── */
-.tab-wrap { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.tab {
-  padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
-  cursor: pointer; border: 1.5px solid var(--border2); background: white;
-  color: var(--txt2); transition: all 0.18s; font-family: inherit;
-}
-.tab:hover { border-color: var(--sky-mid); color: var(--sky-dark); background: var(--sky-light); }
-.tab.active { background: var(--sky); color: white; border-color: var(--sky); box-shadow: 0 3px 10px rgba(122,179,204,0.35); }
-.tab-secret { border-color: #f5d67a !important; color: #92400e !important; }
-.tab-secret.active { background: #f5d67a !important; color: #92400e !important; border-color: #f5d67a !important; box-shadow: 0 3px 8px rgba(245,214,122,0.4) !important; }
+/* Grid */
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.post-card{background:white;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);transition:all .22s;display:flex;flex-direction:column}
+.post-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--border2)}
+.post-card.secret-card{border-color:var(--peach-mid)}
+.card-stripe{height:5px}
+.card-body{padding:16px;flex:1;display:flex;flex-direction:column}
+.card-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-secret{background:var(--peach-light);color:var(--peach-dark);border:1px solid var(--peach-mid)}
+.card-title{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:8px;line-height:1.45}
+.card-content{font-size:13px;color:var(--txt2);line-height:1.65;flex:1;margin-bottom:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1.5px solid var(--border);gap:8px}
+.card-meta{font-size:11px;color:var(--txt3);font-weight:500;flex-shrink:0}
+.card-actions{display:flex;align-items:center;gap:6px}
 
-/* ── Write panel ── */
-.write-panel {
-  background: white; border: 1.5px solid var(--border2);
-  border-radius: var(--r); padding: 1.5rem; margin-bottom: 1.5rem;
-  box-shadow: var(--shadow-md); animation: slideDown 0.22s ease;
-}
-@keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-.write-title { font-family: 'Gowun Dodum', serif; font-size: 17px; margin-bottom: 1.25rem; color: var(--txt); display: flex; align-items: center; gap: 8px; }
-.field { margin-bottom: 13px; }
-.field label { font-size: 12px; color: var(--txt2); font-weight: 600; display: block; margin-bottom: 5px; }
-.field input, .field select, .field textarea {
-  width: 100%; padding: 10px 13px; border: 1.5px solid var(--border2);
-  border-radius: var(--r-sm); background: var(--warm); font-family: inherit;
-  font-size: 13px; color: var(--txt); outline: none; transition: all 0.18s; font-weight: 500;
-}
-.field input:focus, .field select:focus, .field textarea:focus {
-  border-color: var(--sky); background: white; box-shadow: 0 0 0 3px rgba(122,179,204,0.14);
-}
-.field textarea { resize: vertical; min-height: 100px; line-height: 1.7; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.secret-toggle {
-  display: flex; align-items: center; gap: 10px; padding: 10px 13px;
-  border-radius: var(--r-sm); border: 1.5px solid var(--border2);
-  cursor: pointer; font-size: 13px; color: var(--txt2); font-weight: 600;
-  transition: all 0.18s; user-select: none; background: var(--warm);
-}
-.secret-toggle:hover { border-color: var(--peach-mid); color: var(--peach-dark); background: var(--peach-light); }
-.secret-toggle.on { border-color: var(--peach-mid); color: var(--peach-dark); background: var(--peach-light); }
-.secret-toggle input { width: 14px; height: 14px; accent-color: var(--peach); }
-.write-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; padding-top: 14px; border-top: 1.5px solid var(--border); }
+/* Like & Comment buttons on card */
+.like-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:white;color:var(--txt3);transition:all .18s;font-family:inherit}
+.like-btn:hover{border-color:var(--peach-mid);color:var(--peach);background:var(--peach-light)}
+.like-btn.liked{border-color:var(--peach-mid);color:var(--peach-dark);background:var(--peach-light)}
+.comment-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:white;color:var(--txt3);transition:all .18s;font-family:inherit}
+.comment-btn:hover{border-color:var(--sky-mid);color:var(--sky-dark);background:var(--sky-light)}
 
-/* ── Grid ── */
-.posts-grid { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; align-items:flex-start; }
-.post-card {
-  width:300px; max-width:300px; flex:0 0 300px; min-height:430px;
-  background: white; border: 1.5px solid var(--border);
-  border-radius: var(--r); overflow: hidden;
-  box-shadow: var(--shadow); transition: all 0.22s;
-  display: flex; flex-direction: column;
-}
-.post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--border2); }
-.post-card.secret-card { border-color: var(--peach-mid); }
-.card-stripe { height: 5px; }
-.card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-.card-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 9px; }
-.badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge-secret { background: var(--peach-light); color: var(--peach-dark); border: 1px solid var(--peach-mid); }
-.card-title { font-size: 14px; font-weight: 700; color: var(--txt); margin-bottom: 8px; line-height: 1.45; font-family: 'Noto Sans KR','Inter',sans-serif; }
-.card-content { font-size: 13px; color: var(--txt2); line-height: 1.65; flex: 1; margin-bottom: 12px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1.5px solid var(--border); }
-.card-meta { font-size: 11px; color: var(--txt3); font-weight: 500; }
+/* Post detail modal */
+.detail-title{font-family:'Gowun Dodum',serif;font-size:18px;color:var(--txt);margin-bottom:6px;line-height:1.4}
+.detail-meta{font-size:12px;color:var(--txt3);margin-bottom:14px;font-weight:500}
+.detail-content{font-size:14px;color:var(--txt2);line-height:1.75;margin-bottom:18px;white-space:pre-wrap;word-break:break-word}
+.detail-like-row{display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border);margin-bottom:18px}
+.comments-section{margin-top:4px}
+.comments-title{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.comment-item{background:var(--warm);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:8px;position:relative}
+.comment-author{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:3px}
+.comment-body{font-size:13px;color:var(--txt);line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.comment-time{font-size:11px;color:var(--txt3);margin-top:4px}
+.comment-del{position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;font-size:13px;color:var(--txt3);padding:2px 5px;border-radius:4px;display:none}
+.comment-del:hover{color:#b91c1c;background:#fdecea}
+.comment-form{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.comment-form input,.comment-form textarea{border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:9px 12px;font-family:inherit;font-size:13px;color:var(--txt);background:white;outline:none;transition:border-color .18s}
+.comment-form input:focus,.comment-form textarea:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(122,179,204,.14)}
+.comment-form textarea{resize:vertical;min-height:70px;line-height:1.6}
+.comment-form-row{display:flex;gap:8px}
+.no-comments{text-align:center;padding:1.5rem;color:var(--txt3);font-size:13px;font-family:'Gowun Dodum',serif}
 
-/* ── Empty / Loading ── */
-.empty { text-align: center; padding: 5rem 1rem; }
-.empty-emoji { font-size: 48px; margin-bottom: 12px; }
-.empty-text { font-size: 14px; color: var(--txt3); font-weight: 600; font-family: 'Gowun Dodum', serif; }
-.loading { text-align: center; padding: 4rem; }
-.spinner { width: 34px; height: 34px; border: 3px solid var(--border2); border-top-color: var(--sky); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 14px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 13px; color: var(--txt3); font-weight: 600; font-family: 'Gowun Dodum', serif; }
+/* Empty / Loading */
+.empty{text-align:center;padding:5rem 1rem}
+.empty-emoji{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:14px;color:var(--txt3);font-weight:600;font-family:'Gowun Dodum',serif}
+.loading{text-align:center;padding:4rem}
+.spinner{width:34px;height:34px;border:3px solid var(--border2);border-top-color:var(--sky);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--txt3);font-weight:600;font-family:'Gowun Dodum',serif}
 
-/* ── Modal ── */
-.modal-backdrop {
-  position: fixed; inset: 0; background: rgba(61,46,36,0.38);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 999; padding: 1rem; animation: fadeIn 0.16s ease;
-}
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-.modal {
-  background: white; border-radius: var(--r); padding: 1.75rem;
-  width: 100%; max-width: 420px;
-  box-shadow: var(--shadow-lg); border: 1.5px solid var(--border2);
-  animation: popIn 0.2s ease;
-}
-.modal-lg { max-width: 540px; }
-@keyframes popIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
-.modal-title { font-family: 'Gowun Dodum', serif; font-size: 19px; margin-bottom: 1.25rem; color: var(--txt); }
-.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
-.error-msg { font-size: 12px; color: var(--peach-dark); margin-top: 5px; display: none; font-weight: 600; }
-.hint-box { margin-top: 12px; padding: 10px 13px; background: var(--sky-light); border-radius: var(--r-sm); font-size: 12px; color: var(--sky-dark); font-weight: 600; border: 1px solid var(--sky-mid); }
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(61,46,36,.38);display:flex;align-items:center;justify-content:center;z-index:999;padding:1rem;animation:fadeIn .16s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:white;border-radius:var(--r);padding:1.75rem;width:100%;max-width:460px;box-shadow:var(--shadow-lg);border:1.5px solid var(--border2);animation:popIn .2s ease;max-height:90vh;overflow-y:auto}
+.modal-lg{max-width:560px}
+.modal-xl{max-width:640px}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Gowun Dodum',serif;font-size:19px;margin-bottom:1.25rem;color:var(--txt)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.error-msg{font-size:12px;color:var(--peach-dark);margin-top:5px;display:none;font-weight:600}
+.hint-box{margin-top:12px;padding:10px 13px;background:var(--sky-light);border-radius:var(--r-sm);font-size:12px;color:var(--sky-dark);font-weight:600;border:1px solid var(--sky-mid)}
 
-/* ── Category Manager ── */
-.cat-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; max-height: 260px; overflow-y: auto; }
-.cat-item { display: flex; align-items: center; gap: 10px; background: var(--warm); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 9px 12px; }
-.cat-dot { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
-.cat-icon { font-size: 16px; }
-.cat-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--txt); }
-.cat-key { font-size: 11px; color: var(--txt3); font-family: monospace; background: white; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border2); }
-.color-options { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 7px; }
-.color-opt { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
-.color-opt.selected { border-color: var(--txt); transform: scale(1.2); }
-.icon-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.icon-opt { width: 32px; height: 32px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 17px; transition: all 0.15s; background: var(--warm); }
-.icon-opt:hover { background: var(--warm2); }
-.icon-opt.selected { border-color: var(--sky); background: var(--sky-light); }
-.add-sep { border: none; border-top: 1.5px solid var(--border); margin: 1rem 0; }
+/* Category manager — state preserved */
+.cat-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem;max-height:220px;overflow-y:auto}
+.cat-item{display:flex;align-items:center;gap:10px;background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
+.cat-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.cat-name{flex:1;font-size:13px;font-weight:600;color:var(--txt)}
+.cat-key{font-size:11px;color:var(--txt3);font-family:monospace;background:white;padding:2px 6px;border-radius:4px;border:1px solid var(--border2)}
+.color-options{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
+.color-opt{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.color-opt.selected{border-color:var(--txt);transform:scale(1.2)}
+.icon-picker{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.icon-opt{width:32px;height:32px;border-radius:8px;cursor:pointer;border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .15s;background:var(--warm)}
+.icon-opt:hover{background:var(--warm2)}
+.icon-opt.selected{border-color:var(--sky);background:var(--sky-light)}
+.add-sep{border:none;border-top:1.5px solid var(--border);margin:.875rem 0}
+.section-label{font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px}
 
-/* ── Toast ── */
-.toast {
-  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-  background: var(--txt); color: #fdf8f3; padding: 11px 22px;
-  border-radius: 24px; font-size: 13px; font-weight: 600;
-  z-index: 9999; white-space: nowrap;
-  animation: toastIn 0.2s ease; box-shadow: 0 6px 20px rgba(61,46,36,0.25);
-}
-@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--txt);color:#fdf8f3;padding:11px 22px;border-radius:24px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;animation:toastIn .2s ease;box-shadow:0 6px 20px rgba(61,46,36,.25)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-/* ── Setup error ── */
-.setup-error { background: white; border: 1.5px solid #fca5a5; border-radius: var(--r); padding: 2rem; box-shadow: var(--shadow); }
-.setup-error pre { background: var(--warm); border: 1.5px solid var(--border); border-radius: var(--r-sm); padding: 1rem; font-size: 11px; overflow-x: auto; line-height: 1.8; color: var(--txt); margin: 1rem 0; }
+.setup-error{background:white;border:1.5px solid #fca5a5;border-radius:var(--r);padding:2rem;box-shadow:var(--shadow)}
+.setup-error pre{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:1rem;font-size:11px;overflow-x:auto;line-height:1.8;color:var(--txt);margin:1rem 0}
 
-/* ── Responsive ── */
-@media (max-width: 680px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .posts-grid { display:flex; flex-direction:column; gap:14px; }
-  .post-card { width:100%; max-width:100%; flex:none; }
-  .row2 { grid-template-columns: 1fr; }
-  .hero-mu, .hero-mul { font-size: 34px; }
-  .hero-mu em, .hero-mul em { font-size: 40px; }
-  .hero-board { font-size: 18px; }
-  .container { padding: 1.25rem 1rem; }
-}
-
-.comment-more-btn {
-  background: transparent;
-  border: none;
-  color: var(--txt3);
-  font-size: 11px;
-  cursor: pointer;
-  padding: 0;
-}
-.comment-more-btn:hover {
-  color: var(--txt2);
-  text-decoration: underline;
+@media(max-width:680px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .posts-grid{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .hero-main{font-size:30px}
+  .hero-main .board{font-size:22px}
+  .container{padding:1.25rem 1rem}
 }
 </style>
-
-<style id="hard-three-col-board">
-/* 데스크톱에서는 카드 3개가 한 줄에 딱 들어가도록 강제 */
-@media (min-width: 1100px){
-  main.container{
-    max-width: 1120px !important;
-  }
-  main.container #app .posts-grid{
-    display:grid !important;
-    grid-template-columns: 320px 320px 320px !important;
-    gap:16px !important;
-    justify-content:center !important;
-    align-items:start !important;
-    width:992px !important;
-    max-width:992px !important;
-    margin:0 auto !important;
-  }
-  main.container #app .post-card{
-    width:320px !important;
-    min-width:320px !important;
-    max-width:320px !important;
-    height:430px !important;
-    min-height:430px !important;
-    margin:0 !important;
-    flex:none !important;
-    display:flex !important;
-    flex-direction:column !important;
-    overflow:hidden !important;
-  }
-  main.container #app .post-card .card-body{
-    display:flex !important;
-    flex-direction:column !important;
-    min-height:0 !important;
-    height:100% !important;
-  }
-}
-
-/* 태블릿은 2열 */
-@media (min-width: 701px) and (max-width: 1099px){
-  main.container #app .posts-grid{
-    display:grid !important;
-    grid-template-columns: 320px 320px !important;
-    gap:16px !important;
-    justify-content:center !important;
-    align-items:start !important;
-    width:656px !important;
-    max-width:656px !important;
-    margin:0 auto !important;
-  }
-  main.container #app .post-card{
-    width:320px !important;
-    min-width:320px !important;
-    max-width:320px !important;
-    height:430px !important;
-    min-height:430px !important;
-    margin:0 !important;
-    flex:none !important;
-    display:flex !important;
-    flex-direction:column !important;
-    overflow:hidden !important;
-  }
-  main.container #app .post-card .card-body{
-    display:flex !important;
-    flex-direction:column !important;
-    min-height:0 !important;
-    height:100% !important;
-  }
-}
-
-/* 모바일은 1열 */
-@media (max-width: 700px){
-  main.container #app .posts-grid{
-    display:grid !important;
-    grid-template-columns: 1fr !important;
-    gap:14px !important;
-    width:100% !important;
-    max-width:100% !important;
-    margin:0 auto !important;
-  }
-  main.container #app .post-card{
-    width:100% !important;
-    min-width:0 !important;
-    max-width:100% !important;
-    height:auto !important;
-    min-height:auto !important;
-    margin:0 !important;
-    flex:none !important;
-  }
-}
-</style>
-
 </head>
 <body>
 
@@ -582,13 +215,10 @@ body {
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-eyebrow">높은뜻 하늘교회 청소년부</div>
-    <div class="hero-title">— what's on your heart? —</div>
     <div class="hero-main">
-      <span class="hero-mu"><em>Mu</em>엇이든</span>
-      <span class="hero-mul"><em>Mul</em>어</span>
-      <span class="hero-board">Board</span>
+      <span class="hi-peach">Mu</span>엇이든&nbsp;<span class="hi-sky">Mul</span>어<span class="board">Board</span>
     </div>
-    <div class="hero-church">공지, 건의, 질문 — 뭐든 편하게 올려요 ✉️</div>
+    <div class="hero-sub">공지, 건의, 질문 — 뭐든 편하게 올려요 ✉️</div>
   </div>
 </div>
 
@@ -606,183 +236,201 @@ const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const DEFAULT_CATS = [
-  { key:'notice',   label:'공지',  icon:'📢', color:'#7ab3cc' },
-  { key:'suggest',  label:'건의',  icon:'💌', color:'#e07d5a' },
-  { key:'question', label:'질문',  icon:'🙋', color:'#a8cedd' },
-  { key:'reply',    label:'답변',  icon:'💬', color:'#eba98e' },
+  { key:'notice',   label:'공지', icon:'📢', color:'#7ab3cc' },
+  { key:'suggest',  label:'건의', icon:'💌', color:'#e07d5a' },
+  { key:'question', label:'질문', icon:'🙋', color:'#a8cedd' },
+  { key:'reply',    label:'답변', icon:'💬', color:'#eba98e' },
 ];
-
 const COLORS = ['#7ab3cc','#e07d5a','#a8cedd','#eba98e','#b5a4c8','#84bfa8','#e8b86d','#c98ca0','#8fb9a8','#d4956a'];
-const ICONS = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛','🔥','🎯','📚','🧠','💭','🎈','🪴','🌈','🧩','🕯️','🎤','🎧'];
+const ICONS  = ['📢','💌','🙋','💬','🙏','📖','🎵','⚽','🎉','📝','❓','💡','📌','🕊️','🌱','🔔','👋','✝️','🌟','💛'];
 
+/* ── State ── */
 let state = {
   isAdmin: sessionStorage.getItem('isAdmin') === 'true',
   activeTab: 'all',
   search: '',
   posts: [],
+  likes: {},       // postId → count
+  myLikes: new Set(JSON.parse(localStorage.getItem('myLikes')||'[]')),
+  comments: {},    // postId → [{id,author,body,created_at}]
   loading: true,
   showWrite: false,
-  cats: JSON.parse(localStorage.getItem('board_cats') || 'null') || DEFAULT_CATS,
-  newColor: COLORS[0],
-  newIcon: ICONS[0],
+  cats: JSON.parse(localStorage.getItem('board_cats')||'null') || DEFAULT_CATS,
+  /* category modal draft — persists during color/icon picks */
+  draft: { label:'', key:'', color: COLORS[0], icon: ICONS[0] },
 };
 
 /* ── Utils ── */
 function toast(msg, dur=2600) {
   const el = document.createElement('div');
-  el.className = 'toast'; el.textContent = msg;
+  el.className='toast'; el.textContent=msg;
   document.getElementById('toastArea').appendChild(el);
-  setTimeout(() => el.remove(), dur);
+  setTimeout(()=>el.remove(), dur);
 }
-
 function fmt(iso) {
-  const d = new Date(iso), now = new Date(), diff = now - d;
-  if (diff < 60000) return '방금 전';
-  if (diff < 3600000) return Math.floor(diff/60000) + '분 전';
-  if (diff < 86400000) return Math.floor(diff/3600000) + '시간 전';
-  if (diff < 86400000*7) return Math.floor(diff/86400000) + '일 전';
-  return d.toLocaleDateString('ko-KR', { month:'short', day:'numeric' });
+  const d=new Date(iso),now=new Date(),diff=now-d;
+  if(diff<60000) return '방금 전';
+  if(diff<3600000) return Math.floor(diff/60000)+'분 전';
+  if(diff<86400000) return Math.floor(diff/3600000)+'시간 전';
+  if(diff<86400000*7) return Math.floor(diff/86400000)+'일 전';
+  return d.toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
 }
-
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function getCat(key) {
-  return state.cats.find(c => c.key === key) || { label: key, icon: '📌', color: '#b09e94' };
-}
-
-function saveCats() { localStorage.setItem('board_cats', JSON.stringify(state.cats)); }
-
-/* hex to rgba helper */
-function hexAlpha(hex, a) {
-  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${a})`;
-}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+function getCat(key){ return state.cats.find(c=>c.key===key)||{label:key,icon:'📌',color:'#b09e94'} }
+function saveCats(){ localStorage.setItem('board_cats',JSON.stringify(state.cats)) }
+function saveMyLikes(){ localStorage.setItem('myLikes',JSON.stringify([...state.myLikes])) }
+function hexAlpha(hex,a){ const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${a})` }
 
 /* ── Supabase ── */
-function showSetupError() {
-  document.getElementById('app').innerHTML = `<div class="setup-error">
-    <div style="font-size:17px;font-weight:700;color:#b91c1c;margin-bottom:8px">⚠️ 테이블 설정이 필요해요</div>
-    <p style="font-size:13px;color:var(--txt2);line-height:1.7">Supabase SQL Editor에서 아래 SQL을 실행해 주세요.</p>
-    <pre>create table posts (
+function showSetupError(){
+  document.getElementById('app').innerHTML=`<div class="setup-error">
+    <div style="font-size:16px;font-weight:700;color:#b91c1c;margin-bottom:8px">⚠️ 테이블 설정이 필요해요</div>
+    <p style="font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:4px">Supabase SQL Editor에서 아래 SQL을 실행해 주세요.</p>
+    <pre>-- 게시물 테이블 (이미 있으면 건너뜀)
+create table if not exists posts (
   id bigint generated always as identity primary key,
-  type text not null,
-  title text not null,
-  content text not null,
-  author text not null,
+  type text not null, title text not null,
+  content text not null, author text not null,
   author_type text not null,
   is_secret boolean default false,
+  likes int default 0,
   created_at timestamptz default now()
 );
+
+-- 댓글 테이블
+create table if not exists comments (
+  id bigint generated always as identity primary key,
+  post_id bigint references posts(id) on delete cascade,
+  author text not null,
+  body text not null,
+  created_at timestamptz default now()
+);
+
 alter table posts enable row level security;
-create policy "public read non-secret" on posts for select using (is_secret = false);
-create policy "anyone insert" on posts for insert with check (true);
-create policy "anyone delete" on posts for delete using (true);</pre>
+alter table comments enable row level security;
+
+create policy "public read posts" on posts for select using (is_secret = false);
+create policy "anyone insert posts" on posts for insert with check (true);
+create policy "anyone delete posts" on posts for delete using (true);
+create policy "anyone update posts" on posts for update using (true);
+
+create policy "public read comments" on comments for select using (true);
+create policy "anyone insert comments" on comments for insert with check (true);
+create policy "anyone delete comments" on comments for delete using (true);</pre>
     <button class="btn btn-sky" onclick="location.reload()">새로고침</button>
   </div>`;
 }
 
-function showErrBanner(msg) {
-  document.getElementById('app').innerHTML = `
+function showErrBanner(msg){
+  document.getElementById('app').innerHTML=`
     <div style="background:#fdecea;border:1.5px solid #fca5a5;border-radius:var(--r);padding:1.25rem 1.5rem">
       <div style="font-size:14px;font-weight:700;color:#b91c1c;margin-bottom:6px">연결 오류</div>
       <div style="font-size:12px;color:#7f1d1d;font-family:monospace;background:white;padding:8px;border-radius:7px;word-break:break-all">${esc(msg)}</div>
-      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="fetchPosts()">다시 시도</button>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="fetchAll()">다시 시도</button>
     </div>`;
 }
 
-async function fetchPosts() {
-  state.loading = true; render();
+async function fetchAll(){
+  state.loading=true; render();
   try {
-    const { data, error } = await db.from('posts').select('*').order('created_at', { ascending: false });
-    if (error) {
-      state.loading = false;
-      if (error.code === '42P01' || (error.message||'').includes('does not exist')) showSetupError();
+    const {data,error} = await db.from('posts').select('*').order('created_at',{ascending:false});
+    if(error){
+      state.loading=false;
+      if(error.code==='42P01'||(error.message||'').includes('does not exist')) showSetupError();
       else showErrBanner(`[${error.code}] ${error.message}`);
       return;
     }
-    state.posts = state.isAdmin ? (data||[]) : (data||[]).filter(p => !p.is_secret);
-  } catch(e) {
-    state.loading = false; showErrBanner(e?.message || String(e)); return;
-  }
-  state.loading = false; render();
+    state.posts = state.isAdmin ? (data||[]) : (data||[]).filter(p=>!p.is_secret);
+    /* build likes map from DB */
+    state.likes={};
+    (data||[]).forEach(p=>{ state.likes[p.id]=p.likes||0; });
+    /* fetch all comments */
+    const {data:cmts} = await db.from('comments').select('*').order('created_at',{ascending:true});
+    state.comments={};
+    (cmts||[]).forEach(c=>{
+      if(!state.comments[c.post_id]) state.comments[c.post_id]=[];
+      state.comments[c.post_id].push(c);
+    });
+  } catch(e){ state.loading=false; showErrBanner(e?.message||String(e)); return; }
+  state.loading=false; render();
 }
 
-async function insertPost(post) {
-  const { error } = await db.from('posts').insert([post]);
-  if (error) throw error;
+async function insertPost(post){ const {error}=await db.from('posts').insert([post]); if(error) throw error; }
+async function deletePost(id){ const {error}=await db.from('posts').delete().eq('id',id); if(error) throw error; }
+async function incrementLike(id){
+  const cur = state.likes[id]||0;
+  const {error}=await db.from('posts').update({likes:cur+1}).eq('id',id);
+  if(error) throw error;
+  state.likes[id]=cur+1;
 }
-
-async function removePost(id) {
-  const { error } = await db.from('posts').delete().eq('id', id);
-  if (error) throw error;
+async function insertComment(postId,author,body){
+  const {data,error}=await db.from('comments').insert([{post_id:postId,author,body}]).select().single();
+  if(error) throw error;
+  if(!state.comments[postId]) state.comments[postId]=[];
+  state.comments[postId].push(data);
+}
+async function deleteComment(postId,commentId){
+  const {error}=await db.from('comments').delete().eq('id',commentId);
+  if(error) throw error;
+  state.comments[postId]=(state.comments[postId]||[]).filter(c=>c.id!==commentId);
 }
 
 /* ── Computed ── */
-function visiblePosts() {
-  let list = [...state.posts];
-  if (state.activeTab === 'secret') list = list.filter(p => p.is_secret);
-  else if (state.activeTab !== 'all') list = list.filter(p => p.type === state.activeTab);
-  if (!state.isAdmin) list = list.filter(p => !p.is_secret);
-  if (state.search.trim()) {
-    const q = state.search.toLowerCase();
-    list = list.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.author.toLowerCase().includes(q));
+function visiblePosts(){
+  let list=[...state.posts];
+  if(state.activeTab==='secret') list=list.filter(p=>p.is_secret);
+  else if(state.activeTab!=='all') list=list.filter(p=>p.type===state.activeTab);
+  if(!state.isAdmin) list=list.filter(p=>!p.is_secret);
+  if(state.search.trim()){
+    const q=state.search.toLowerCase();
+    list=list.filter(p=>p.title.toLowerCase().includes(q)||p.content.toLowerCase().includes(q)||p.author.toLowerCase().includes(q));
   }
   return list;
 }
 
 /* ── Render ── */
-function render() { renderHeader(); renderApp(); }
+function render(){ renderHeader(); renderApp(); }
 
-function renderHeader() {
-  const el = document.getElementById('headerRight');
-  if (state.isAdmin) {
-    el.innerHTML = `
+function renderHeader(){
+  const el=document.getElementById('headerRight');
+  if(state.isAdmin){
+    el.innerHTML=`
       <span class="badge" style="background:#fef9ec;color:#92400e;border:1px solid #f5d67a;font-size:11px">👑 관리자</span>
       <button class="btn btn-ghost btn-sm" onclick="openCatManager()">카테고리 관리</button>
       <button class="btn btn-ghost btn-sm" onclick="logout()">로그아웃</button>`;
   } else {
-    el.innerHTML = `<button class="btn btn-outline btn-sm" onclick="openAdminLogin()">관리자 로그인</button>`;
+    el.innerHTML=`<button class="btn btn-outline btn-sm" onclick="openAdminLogin()">관리자 로그인</button>`;
   }
 }
 
-function renderApp() {
-  const el = document.getElementById('app');
-  if (state.loading) {
-    el.innerHTML = `<div class="loading"><div class="spinner"></div><div class="loading-text">잠시만 기다려 주세요...</div></div>`;
+function renderApp(){
+  const el=document.getElementById('app');
+  if(state.loading){
+    el.innerHTML=`<div class="loading"><div class="spinner"></div><div class="loading-text">잠시만 기다려 주세요...</div></div>`;
     return;
   }
+  const all=state.posts, pub=all.filter(p=>!p.is_secret), sec=all.filter(p=>p.is_secret), vp=visiblePosts();
 
-  const all = state.posts;
-  const pub = all.filter(p => !p.is_secret);
-  const sec = all.filter(p => p.is_secret);
-  const vp = visiblePosts();
-
-  const statsHtml = `<div class="stats">
-    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#7ab3cc',0.15)}">📋</div><div><div class="stat-label">전체 게시물</div><div class="stat-value">${all.length}</div></div></div>
-    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#84bfa8',0.15)}">✅</div><div><div class="stat-label">공개</div><div class="stat-value">${pub.length}</div></div></div>
-    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#e07d5a',0.13)}">🔒</div><div><div class="stat-label">비공개</div><div class="stat-value">${sec.length}</div></div></div>
-    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#b5a4c8',0.15)}">🏷️</div><div><div class="stat-label">카테고리</div><div class="stat-value">${state.cats.length}</div></div></div>
+  const statsHtml=`<div class="stats">
+    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#7ab3cc',.15)}">📋</div><div><div class="stat-label">전체 게시물</div><div class="stat-value">${all.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#84bfa8',.15)}">✅</div><div><div class="stat-label">공개</div><div class="stat-value">${pub.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#e07d5a',.13)}">🔒</div><div><div class="stat-label">비공개</div><div class="stat-value">${sec.length}</div></div></div>
+    <div class="stat"><div class="stat-icon" style="background:${hexAlpha('#b5a4c8',.15)}">🏷️</div><div><div class="stat-label">카테고리</div><div class="stat-value">${state.cats.length}</div></div></div>
   </div>`;
 
-  const adminBarHtml = state.isAdmin ? `
+  const adminBarHtml=state.isAdmin?`
     <div class="admin-bar">
-      <span class="admin-label">👑 관리자 모드 — 비공개 포함 전체 열람 및 삭제 가능</span>
+      <span class="admin-label">👑 관리자 모드 — 비공개 포함 전체 열람·삭제 가능</span>
       <button class="btn btn-sm btn-sky" onclick="openCatManager()">카테고리 관리</button>
-    </div>` : '';
+    </div>`:''  ;
 
-  const tabs = [
-    { key:'all', label:'전체', icon:'✨' },
-    ...state.cats.map(c => ({ key:c.key, label:c.label, icon:c.icon||'' })),
-    ...(state.isAdmin ? [{ key:'secret', label:'비공개', icon:'🔒', secret:true }] : []),
-  ];
-  const tabHtml = tabs.map(t => {
-    const cls = ['tab', t.key===state.activeTab?'active':'', t.secret?'tab-secret':''].join(' ').trim();
+  const tabs=[{key:'all',label:'전체',icon:'✨'},...state.cats.map(c=>({key:c.key,label:c.label,icon:c.icon||''})),...(state.isAdmin?[{key:'secret',label:'비공개',icon:'🔒',secret:true}]:[])];
+  const tabHtml=tabs.map(t=>{
+    const cls=['tab',t.key===state.activeTab?'active':'',t.secret?'tab-secret':''].join(' ').trim();
     return `<button class="${cls}" onclick="setTab('${esc(t.key)}')">${t.icon} ${esc(t.label)}</button>`;
   }).join('');
 
-  const writeHtml = state.showWrite ? `<div class="write-panel">
+  const writeHtml=state.showWrite?`<div class="write-panel">
     <div class="write-title">✏️ 새 게시물 작성하기</div>
     <div class="row2">
       <div class="field"><label>카테고리</label>
@@ -810,154 +458,42 @@ function renderApp() {
       <button class="btn btn-ghost" onclick="toggleWrite()">취소</button>
       <button class="btn btn-peach btn-lg" id="submitBtn" onclick="submitPost()">게시하기 →</button>
     </div>
-  </div>` : '';
+  </div>`:'';
 
   let postsHtml;
-  if (vp.length === 0) {
-    postsHtml = `<div class="empty"><div class="empty-emoji">💌</div><div class="empty-text">아직 게시물이 없어요. 첫 글을 남겨봐요!</div></div>`;
+  if(vp.length===0){
+    postsHtml=`<div class="empty"><div class="empty-emoji">💌</div><div class="empty-text">아직 게시물이 없어요. 첫 글을 남겨봐요!</div></div>`;
   } else {
-    postsHtml = `<div class="posts-grid">${vp.map(p => {
-      const cat = getCat(p.type);
-      const secBadge = p.is_secret ? `<span class="badge badge-secret">🔒 비공개</span>` : '';
-      const delBtn = state.isAdmin ? `<button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.id})">삭제</button>` : '';
+    postsHtml=`<div class="posts-grid">${vp.map(p=>{
+      const cat=getCat(p.type);
+      const secBadge=p.is_secret?`<span class="badge badge-secret">🔒 비공개</span>`:'';
+      const delBtn=state.isAdmin?`<button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.id})">삭제</button>`:'';
+      const liked=state.myLikes.has(p.id);
+      const likeCount=state.likes[p.id]||0;
+      const cmtCount=(state.comments[p.id]||[]).length;
       return `<div class="post-card ${p.is_secret?'secret-card':''}">
-        <div class="card-stripe" style="background:linear-gradient(90deg,${cat.color},${hexAlpha(cat.color,0.5)})"></div>
+        <div class="card-stripe" style="background:linear-gradient(90deg,${cat.color},${hexAlpha(cat.color,.45)})"></div>
         <div class="card-body">
           <div class="card-badges">
-            <span class="badge" style="background:${hexAlpha(cat.color,0.14)};color:${cat.color}">${cat.icon||''} ${esc(cat.label)}</span>
+            <span class="badge" style="background:${hexAlpha(cat.color,.14)};color:${cat.color}">${cat.icon||''} ${esc(cat.label)}</span>
             ${secBadge}
           </div>
           <div class="card-title">${esc(p.title)}</div>
           <div class="card-content">${esc(p.content)}</div>
           <div class="card-footer">
-            <div class="card-meta"></div>
-            ${delBtn}
-          </div>
-<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e7e2dd;width:100%;box-sizing:border-box;">
-
-<div style="margin-bottom:8px;font-size:13px">
-👍 ${reactions[p.id]?.likes||0}
-<button class="btn btn-sm" onclick="likePost(${p.id})">
-${myLikes[p.id]?'취소':'좋아요'}
-</button>
-</div>
-
-<div style="
-  width:100%;
-  max-width:100%;
-  box-sizing:border-box;
-  margin-top:0;
-  margin-bottom:0;
-  min-height:52px;
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-  padding:0 16px;
-  background:#f3f3f3;
-  border-top:1px solid #e3e3e3;
-">
-  <span style="
-    font-size:18px;
-    color:#c8c8c8;
-    line-height:1;
-    flex-shrink:0;
-  ">🪽</span>
-  <textarea
-    id="cinput-${p.id}"
-    placeholder="댓글 작성"
-    style="
-      flex:1;
-      width:100%;
-      border:none;
-      outline:none;
-      background:transparent;
-      font-size:10px;
-      font-weight:700;
-      color:#8c8c8c;
-      letter-spacing:-0.02em;
-      resize:none;
-      overflow:hidden;
-      line-height:1.45;
-      min-height:24px;
-      padding:0;
-      margin:0;
-    "
-    rows="1"
-    oninput="this.style.height='auto'; this.style.height=this.scrollHeight+'px';"
-    onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); addComment(${p.id}); }"
-  ></textarea>
-</div>
-
-<div style="font-size:12px;width:100%;">
-${(() => {
-  const comments = reactions[p.id]?.comments || [];
-  const renderComment = (c, i) => `
-    <div style="width:100%;box-sizing:border-box;padding:8px 12px;border-top:1px solid #ececec;background:#fcfcfc;">
-      <div style="
-        width:100%;
-        max-width:100%;
-        box-sizing:border-box;
-        display:block;
-        background:#ffffff;
-        border:1px solid #e7e7e7;
-        border-radius:16px;
-        padding:10px 12px;
-        box-shadow:0 1px 2px rgba(61,46,36,0.04);
-      ">
-        <div style="
-          display:flex;
-          align-items:flex-start;
-          gap:8px;
-          width:100%;
-          max-width:100%;
-          box-sizing:border-box;
-          font-size:10px;
-          line-height:1.5;
-          color:#4b3a31;
-          font-weight:600;
-        ">
-          <span style="font-size:16px;opacity:0.7;">💬</span>
-          <span style="display:block;flex:1;white-space:normal;word-break:break-word;">${c}</span>
-        </div>
-        ${state.isAdmin ? `
-        <div style="text-align:right;margin-top:8px">
-          <button onclick="delComment(${p.id},${i})" style="
-            font-size:12px;
-            opacity:0.55;
-            border:none;
-            background:transparent;
-            cursor:pointer;
-            color:#8b6f61;
-          ">삭제</button>
-        </div>` : ''}
-      </div>
-    </div>
-  `;
-  return `
-    <div style="font-size:12px;width:100%;">
-      ${comments[0] ? renderComment(comments[0], 0) : ''}
-      <div id="extra-comments-${p.id}" style="display:none;">
-        ${comments.slice(1).map((c, idx) => renderComment(c, idx + 1)).join('')}
-      </div>
-      ${comments.length > 1 ? `
-        <div style="padding:8px 12px;background:#fcfcfc;border-top:1px solid #ececec;">
-          <button id="toggle-comments-${p.id}" class="comment-more-btn" onclick="toggleMoreComments(${p.id})">댓글 더보기</button>
-        </div>
-      ` : ''}
-    </div>
-  `;
-})()}
-</div>
-
-</div>
+            <div class="card-meta">${p.author_type==='익명'?'익명':esc(p.author)} · ${fmt(p.created_at)}</div>
+            <div class="card-actions">
+              <button class="like-btn ${liked?'liked':''}" onclick="toggleLike(event,${p.id})">❤️ ${likeCount}</button>
+              <button class="comment-btn" onclick="openDetail(${p.id})">💬 ${cmtCount}</button>
+              ${delBtn}
+            </div>
           </div>
         </div>
       </div>`;
     }).join('')}</div>`;
   }
 
-  el.innerHTML = `
-    ${statsHtml}${adminBarHtml}
+  el.innerHTML=`${statsHtml}${adminBarHtml}
     <div class="toolbar">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
@@ -968,23 +504,119 @@ ${(() => {
     ${writeHtml}
     <div class="tab-wrap">${tabHtml}</div>
     ${postsHtml}`;
-  setTimeout(applyThreeColBoard, 0);
+}
+
+/* ── Post Detail Modal (likes + comments) ── */
+function openDetail(postId){
+  const post=state.posts.find(p=>p.id===postId);
+  if(!post) return;
+  const cat=getCat(post.type);
+  renderDetailModal(post, cat);
+}
+
+function renderDetailModal(post, cat){
+  const liked=state.myLikes.has(post.id);
+  const likeCount=state.likes[post.id]||0;
+  const cmts=state.comments[post.id]||[];
+  const cmtHtml=cmts.length===0
+    ?`<div class="no-comments">아직 댓글이 없어요. 첫 댓글을 남겨봐요 🙂</div>`
+    :cmts.map(c=>`<div class="comment-item" id="cmt-${c.id}">
+        <div class="comment-author">${esc(c.author)}</div>
+        <div class="comment-body">${esc(c.body)}</div>
+        <div class="comment-time">${fmt(c.created_at)}</div>
+        ${state.isAdmin?`<button class="comment-del" style="display:block" onclick="doDeleteComment(${post.id},${c.id})">✕</button>`:''}
+      </div>`).join('');
+
+  openModal(`
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <span class="badge" style="background:${hexAlpha(cat.color,.14)};color:${cat.color}">${cat.icon||''} ${esc(cat.label)}</span>
+      ${post.is_secret?'<span class="badge badge-secret">🔒 비공개</span>':''}
+    </div>
+    <div class="detail-title">${esc(post.title)}</div>
+    <div class="detail-meta">${post.author_type==='익명'?'익명':esc(post.author)} · ${fmt(post.created_at)}</div>
+    <div class="detail-content">${esc(post.content)}</div>
+    <div class="detail-like-row">
+      <button class="like-btn ${liked?'liked':''}" id="detail-like-btn" onclick="toggleLike(event,${post.id},true)">❤️ 좋아요 ${likeCount}</button>
+      <span style="font-size:12px;color:var(--txt3)">${liked?'이미 좋아요를 눌렀어요':'좋아요를 눌러보세요!'}</span>
+    </div>
+    <div class="comments-section">
+      <div class="comments-title">💬 댓글 <span style="color:var(--txt3);font-weight:400">${cmts.length}개</span></div>
+      <div id="cmtList">${cmtHtml}</div>
+      <div class="comment-form">
+        <div class="comment-form-row">
+          <input type="text" id="cmtAuthor" placeholder="이름 (익명 가능)" style="flex:1" maxlength="20" />
+        </div>
+        <textarea id="cmtBody" placeholder="댓글을 남겨봐요 ✏️" rows="3"></textarea>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-sky btn-sm" onclick="submitComment(${post.id})">댓글 달기</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" style="padding-top:0;margin-top:.75rem">
+      ${state.isAdmin?`<button class="btn btn-danger btn-sm" onclick="confirmDelete(${post.id},true)">게시물 삭제</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
+    </div>`, false, true);
+}
+
+async function toggleLike(e, postId, fromDetail=false){
+  e.stopPropagation();
+  if(state.myLikes.has(postId)){ toast('이미 좋아요를 눌렀어요 ❤️'); return; }
+  try {
+    await incrementLike(postId);
+    state.myLikes.add(postId); saveMyLikes();
+    renderApp();
+    if(fromDetail){
+      const post=state.posts.find(p=>p.id===postId);
+      const cat=getCat(post.type);
+      renderDetailModal(post,cat);
+    }
+  } catch(err){ toast('좋아요 처리에 실패했어요.'); }
+}
+
+async function submitComment(postId){
+  const author=(document.getElementById('cmtAuthor')?.value?.trim())||'익명';
+  const body=document.getElementById('cmtBody')?.value?.trim();
+  if(!body){ toast('댓글 내용을 입력해 주세요!'); return; }
+  const btn=document.querySelector('.comment-form .btn-sky');
+  if(btn){btn.disabled=true;btn.textContent='등록 중...';}
+  try {
+    await insertComment(postId,author,body);
+    toast('댓글이 달렸어요! 💬');
+    const post=state.posts.find(p=>p.id===postId);
+    const cat=getCat(post.type);
+    renderApp();
+    renderDetailModal(post,cat);
+  } catch(err){
+    toast('댓글 등록에 실패했어요.');
+    if(btn){btn.disabled=false;btn.textContent='댓글 달기';}
+  }
+}
+
+async function doDeleteComment(postId,cmtId){
+  try {
+    await deleteComment(postId,cmtId);
+    toast('댓글을 삭제했어요.');
+    const post=state.posts.find(p=>p.id===postId);
+    const cat=getCat(post.type);
+    renderApp();
+    renderDetailModal(post,cat);
+  } catch(e){ toast('삭제에 실패했어요.'); }
 }
 
 /* ── Actions ── */
-function setTab(t) { if(t==='secret'&&!state.isAdmin)return; state.activeTab=t; state.search=''; render(); }
-function setSearch(v) { state.search=v; renderApp(); }
-function toggleWrite() { state.showWrite=!state.showWrite; render(); }
-function onAuthorChange() {
-  const sel=document.getElementById('wAuthorType'), f=document.getElementById('authorField'), l=document.getElementById('authorLbl');
+function setTab(t){ if(t==='secret'&&!state.isAdmin)return; state.activeTab=t; state.search=''; render(); }
+function setSearch(v){ state.search=v; renderApp(); }
+function toggleWrite(){ state.showWrite=!state.showWrite; render(); }
+function onAuthorChange(){
+  const sel=document.getElementById('wAuthorType'),f=document.getElementById('authorField'),l=document.getElementById('authorLbl');
   if(!sel||!f)return;
   if(sel.value==='익명') f.style.display='none';
-  else { f.style.display='block'; l.textContent=sel.value; }
+  else{f.style.display='block';l.textContent=sel.value;}
 }
-function toggleSecret() { const cb=document.getElementById('wSecret'); if(cb){cb.checked=!cb.checked;updateSecretStyle();} }
-function updateSecretStyle() { const cb=document.getElementById('wSecret'), el=document.getElementById('secretToggle'); if(cb&&el)el.classList.toggle('on',cb.checked); }
+function toggleSecret(){ const cb=document.getElementById('wSecret'); if(cb){cb.checked=!cb.checked;updateSecretStyle();} }
+function updateSecretStyle(){ const cb=document.getElementById('wSecret'),el=document.getElementById('secretToggle'); if(cb&&el)el.classList.toggle('on',cb.checked); }
 
-async function submitPost() {
+async function submitPost(){
   const type=document.getElementById('wType')?.value;
   const title=document.getElementById('wTitle')?.value?.trim();
   const content=document.getElementById('wContent')?.value?.trim();
@@ -998,87 +630,99 @@ async function submitPost() {
   const btn=document.getElementById('submitBtn');
   if(btn){btn.disabled=true;btn.textContent='올리는 중...';}
   try {
-    await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret});
+    await insertPost({type,title,content,author,author_type:authorType,is_secret:isSecret,likes:0});
     toast('게시물이 올라갔어요! 🎉');
-    state.showWrite=false; await fetchPosts();
-  } catch(e) {
+    state.showWrite=false; await fetchAll();
+  } catch(e){
     toast('게시에 실패했어요.');
     if(btn){btn.disabled=false;btn.textContent='게시하기 →';}
   }
 }
 
-function confirmDelete(id) {
+function confirmDelete(id, fromDetail=false){
   openModal(`<div class="modal-title">게시물을 삭제할까요?</div>
     <p style="font-size:13px;color:var(--txt2);line-height:1.7">삭제 후에는 되돌릴 수 없어요.</p>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">취소</button>
+      <button class="btn btn-ghost" onclick="${fromDetail?'openDetail('+id+')':'closeModal()'}">취소</button>
       <button class="btn btn-danger" onclick="doDelete(${id})">삭제하기</button>
     </div>`);
 }
-async function doDelete(id) {
+async function doDelete(id){
   closeModal();
-  try { await removePost(id); toast('삭제됐어요.'); await fetchPosts(); }
-  catch(e) { toast('삭제에 실패했어요.'); }
+  try{ await deletePost(id); toast('삭제됐어요.'); await fetchAll(); }
+  catch(e){ toast('삭제에 실패했어요.'); }
 }
 
-/* ── Category Manager ── */
-function openCatManager() {
-  const items = state.cats.map((c,i) => `
+/* ── Category Manager — draft state prevents reset ── */
+function openCatManager(){
+  /* read inputs if modal is already open (preserves text while picking color/icon) */
+  const lEl=document.getElementById('nLabel'), kEl=document.getElementById('nKey');
+  if(lEl) state.draft.label=lEl.value;
+  if(kEl) state.draft.key=kEl.value;
+
+  const items=state.cats.map((c,i)=>`
     <div class="cat-item">
       <div class="cat-dot" style="background:${c.color}"></div>
-      <span class="cat-icon">${c.icon||'📌'}</span>
+      <span style="font-size:16px">${c.icon||'📌'}</span>
       <span class="cat-name">${esc(c.label)}</span>
       <span class="cat-key">${esc(c.key)}</span>
       <button class="btn btn-danger btn-sm" onclick="removeCat(${i})">삭제</button>
     </div>`).join('');
 
-  const colorOpts = COLORS.map(col =>
-    `<div class="color-opt${state.newColor===col?' selected':''}" style="background:${col}" onclick="pickColor('${col}')"></div>`).join('');
-
-  const iconOpts = ICONS.map(ic =>
-    `<div class="icon-opt${state.newIcon===ic?' selected':''}" onclick="pickIcon('${ic}')">${ic}</div>`).join('');
+  const colorOpts=COLORS.map(col=>`<div class="color-opt${state.draft.color===col?' selected':''}" style="background:${col}" onclick="pickColor('${col}')"></div>`).join('');
+  const iconOpts=ICONS.map(ic=>`<div class="icon-opt${state.draft.icon===ic?' selected':''}" onclick="pickIcon('${ic}')">${ic}</div>`).join('');
 
   openModal(`
     <div class="modal-title">🏷️ 카테고리 관리</div>
     <div class="cat-list">${items||'<div style="text-align:center;color:var(--txt3);font-size:13px;padding:1rem">카테고리가 없어요</div>'}</div>
     <hr class="add-sep">
-    <div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:10px">새 카테고리 추가</div>
+    <div class="section-label" style="margin-bottom:8px">새 카테고리 추가</div>
     <div class="row2" style="margin-bottom:10px">
-      <div class="field" style="margin:0"><label>이름</label><input type="text" id="nLabel" placeholder="예: 기도제목" maxlength="10"/></div>
-      <div class="field" style="margin:0"><label>키 (영문)</label><input type="text" id="nKey" placeholder="예: prayer" maxlength="20"/></div>
+      <div class="field" style="margin:0"><label>이름</label><input type="text" id="nLabel" placeholder="예: 기도제목" maxlength="10" value="${esc(state.draft.label)}"/></div>
+      <div class="field" style="margin:0"><label>키 (영문)</label><input type="text" id="nKey" placeholder="예: prayer" maxlength="20" value="${esc(state.draft.key)}"/></div>
     </div>
-    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:5px">아이콘 선택</div>
-    <div class="icon-picker">${iconOpts}</div>
-    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin:10px 0 5px">색상 선택</div>
-    <div class="color-options">${colorOpts}</div>
+    <div class="section-label">아이콘 선택 — 현재: ${state.draft.icon}</div>
+    <div class="icon-picker" style="margin-bottom:10px">${iconOpts}</div>
+    <div class="section-label">색상 선택</div>
+    <div class="color-options" style="margin-bottom:4px">${colorOpts}</div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">닫기</button>
       <button class="btn btn-sky" onclick="addCat()">추가하기</button>
     </div>`, true);
 }
 
-function pickColor(col) { state.newColor=col; event.target.classList.add('selected'); }
-function pickIcon(ic) { state.newIcon=ic; event.target.classList.add('selected'); }
-
-function removeCat(i) {
+function pickColor(col){
+  /* save current text before re-render */
+  const lEl=document.getElementById('nLabel'),kEl=document.getElementById('nKey');
+  if(lEl) state.draft.label=lEl.value;
+  if(kEl) state.draft.key=kEl.value;
+  state.draft.color=col; openCatManager();
+}
+function pickIcon(ic){
+  const lEl=document.getElementById('nLabel'),kEl=document.getElementById('nKey');
+  if(lEl) state.draft.label=lEl.value;
+  if(kEl) state.draft.key=kEl.value;
+  state.draft.icon=ic; openCatManager();
+}
+function removeCat(i){
   if(state.cats.length<=1){toast('카테고리는 최소 1개 필요해요!');return;}
   state.cats.splice(i,1); saveCats(); toast('삭제했어요.');
   openCatManager(); renderApp();
 }
-
-function addCat() {
+function addCat(){
   const label=document.getElementById('nLabel')?.value?.trim();
   const key=document.getElementById('nKey')?.value?.trim().toLowerCase().replace(/\s+/g,'_');
   if(!label){toast('이름을 입력해 주세요!');return;}
   if(!key){toast('키를 입력해 주세요! (영문)');return;}
   if(state.cats.find(c=>c.key===key)){toast('이미 있는 키예요!');return;}
-  state.cats.push({key,label,icon:state.newIcon,color:state.newColor});
-  saveCats(); toast(`"${state.newIcon} ${label}" 추가됐어요!`);
+  state.cats.push({key,label,icon:state.draft.icon,color:state.draft.color});
+  saveCats(); toast(`"${state.draft.icon} ${label}" 추가됐어요!`);
+  state.draft={label:'',key:'',color:COLORS[0],icon:ICONS[0]};
   openCatManager(); renderApp();
 }
 
 /* ── Admin Auth ── */
-function openAdminLogin() {
+function openAdminLogin(){
   openModal(`<div class="modal-title">🔑 관리자 로그인</div>
     <div class="field"><label>비밀번호</label>
       <input type="password" id="adminPw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')tryLogin()" />
@@ -1091,85 +735,31 @@ function openAdminLogin() {
     <div class="hint-box">관리자 전용 비밀번호를 입력하세요.</div>`);
   setTimeout(()=>document.getElementById('adminPw')?.focus(),50);
 }
-
-async function tryLogin() {
+async function tryLogin(){
   const pw=document.getElementById('adminPw')?.value;
   if(pw===ADMIN_PW){
     state.isAdmin=true; sessionStorage.setItem('isAdmin','true');
-    closeModal(); toast('관리자로 로그인했어요 👑');
-    await fetchPosts();
+    closeModal(); toast('관리자로 로그인했어요 👑'); await fetchAll();
   } else {
-    const err=document.getElementById('loginErr');
-    if(err)err.style.display='block';
+    const err=document.getElementById('loginErr'); if(err)err.style.display='block';
   }
 }
-
-function logout() {
+function logout(){
   state.isAdmin=false; sessionStorage.removeItem('isAdmin');
   if(state.activeTab==='secret')state.activeTab='all';
-  toast('로그아웃됐어요.'); fetchPosts();
+  toast('로그아웃됐어요.'); fetchAll();
 }
 
 /* ── Modal ── */
-function openModal(html,large=false) {
+function openModal(html, large=false, xl=false){
   document.getElementById('modalArea').innerHTML=
-    `<div class="modal-backdrop" onclick="handleBd(event)"><div class="modal${large?' modal-lg':''}">${html}</div></div>`;
+    `<div class="modal-backdrop" onclick="handleBd(event)"><div class="modal${xl?' modal-xl':large?' modal-lg':''}">${html}</div></div>`;
 }
-function closeModal(){document.getElementById('modalArea').innerHTML='';}
-function handleBd(e){if(e.target===e.currentTarget)closeModal();}
+function closeModal(){ document.getElementById('modalArea').innerHTML=''; }
+function handleBd(e){ if(e.target===e.currentTarget)closeModal(); }
 
-fetchPosts();
-
-/* reactions */
-let reactions = JSON.parse(localStorage.getItem('reactions')||'{}');
-let myLikes = JSON.parse(localStorage.getItem('myLikes')||'{}');
-
-function saveReactions(){
-  localStorage.setItem('reactions',JSON.stringify(reactions));
-  localStorage.setItem('myLikes',JSON.stringify(myLikes));
-}
-
-function likePost(id){
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-
-  if(myLikes[id]){
-    reactions[id].likes = Math.max(0, reactions[id].likes-1);
-    delete myLikes[id];
-  } else {
-    reactions[id].likes++;
-    myLikes[id]=true;
-  }
-  saveReactions();
-  render();
-}
-
-function addComment(id){
-  const input = document.getElementById('cinput-'+id);
-  const text = input.value.trim();
-  if(!text) return;
-  if(!reactions[id]) reactions[id]={likes:0,comments:[]};
-  reactions[id].comments.push(text);
-  input.value='';
-  saveReactions();
-  render();
-}
-
-function delComment(id,i){
-  reactions[id].comments.splice(i,1);
-  saveReactions();
-  render();
-}
-
-
-function toggleMoreComments(postId){
-  const extra = document.getElementById('extra-comments-' + postId);
-  const btn = document.getElementById('toggle-comments-' + postId);
-  if(!extra || !btn) return;
-  const isHidden = extra.style.display === 'none' || extra.style.display === '';
-  extra.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? '댓글 접기' : '댓글 더보기';
-}
-
+/* ── Init ── */
+fetchAll();
 </script>
 </body>
 </html>
