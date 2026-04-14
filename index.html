@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -35,10 +36,9 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 15% 80%,rgba(224,125,90,.12) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 85% 20%,rgba(122,179,204,.18) 0%,transparent 60%)}
 .hero-inner{position:relative;max-width:640px;margin:0 auto}
 .hero-eyebrow{font-family:'Gowun Dodum',serif;font-size:12px;letter-spacing:.14em;color:var(--sky-dark);text-transform:uppercase;margin-bottom:18px;opacity:.8}
-.hero-main{font-family:'Gowun Dodum',serif;font-size:40px;color:var(--txt);letter-spacing:-.5px;line-height:1.2;margin-bottom:10px}
-.hero-main .hi-peach{color:var(--peach)}
-.hero-main .hi-sky{color:var(--sky-dark)}
-.hero-main .board{font-size:28px;color:var(--txt2);opacity:.7;margin-left:6px}
+.hero-main{font-family:'Gowun Dodum',serif;font-size:40px;letter-spacing:-.5px;line-height:1.2;margin-bottom:10px}
+.hero-main .en{color:var(--peach)}
+.hero-main .ko{color:var(--sky-dark)}
 .hero-sub{font-family:'Gowun Dodum',serif;font-size:13px;color:var(--txt3);letter-spacing:.04em}
 
 /* Buttons */
@@ -215,7 +215,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
   <div class="hero-inner">
     <div class="hero-eyebrow">높은뜻 하늘교회 청소년부</div>
     <div class="hero-main">
-      <span class="hi-peach">Mu</span>엇이든&nbsp;<span class="hi-sky">Mul</span>어<span class="board">Board</span>
+      <span class="en">Mu</span><span class="ko">엇이든</span>&nbsp;<span class="en">Mul</span><span class="ko">어</span>&nbsp;<span class="en">Board</span>
     </div>
     <div class="hero-sub">공지, 건의, 질문 — 뭐든 편하게 올려요 ✉️</div>
   </div>
@@ -343,7 +343,9 @@ async function fetchAll(){
       else showErrBanner(`[${postsRes.error.code}] ${postsRes.error.message}`);
       return;
     }
-    const data=postsRes.data||[];
+    const data = postsRes.data||[];
+    /* RLS returns all rows (policy updated to allow select always).
+       Non-admin: filter out secret posts client-side */
     state.posts = state.isAdmin ? data : data.filter(p=>!p.is_secret);
     state.likes={};
     data.forEach(p=>{ state.likes[p.id]=p.likes||0; });
@@ -773,4 +775,3 @@ fetchAll();
 </script>
 </body>
 </html>
-
