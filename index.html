@@ -115,7 +115,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--cream);color:var(--t
 .card-content{font-size:13px;color:var(--txt2);line-height:1.65;flex:1;margin-bottom:12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
 .card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1.5px solid var(--border);gap:8px}
 .card-meta{font-size:11px;color:var(--txt3);font-weight:500;flex-shrink:0}
-.card-actions{display:flex;align-items:center;gap:6px}
+.card-actions{display:flex;align-items:center;gap:5px}
+/* More menu */
+.more-wrap{position:relative;display:inline-flex}
+.more-btn{width:28px;height:28px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:16px;transition:all .15s;line-height:1}
+.more-btn:hover{background:var(--warm2);color:var(--txt2)}
+.more-menu{position:absolute;bottom:calc(100% + 6px);right:0;background:white;border:1.5px solid var(--border2);border-radius:var(--r-sm);box-shadow:var(--shadow-md);min-width:110px;z-index:50;overflow:hidden;animation:popIn .15s ease}
+.more-menu-item{display:flex;align-items:center;gap:7px;padding:9px 13px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:inherit;color:var(--txt2);transition:background .12s}
+.more-menu-item:hover{background:var(--warm)}
+.more-menu-item.danger{color:#b91c1c}
+.more-menu-item.danger:hover{background:#fdecea}
 
 /* Like & Comment buttons on card */
 .like-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:white;color:var(--txt3);transition:all .18s;font-family:inherit}
@@ -573,8 +582,10 @@ function renderApp(){
       const cat=getCat(p.type);
       const secBadge=p.is_secret?`<span class="badge badge-secret">🔒 비공개</span>`:'';
       const canManage = state.isAdmin || state.myPosts.has(p.id);
-      const editBtn=canManage?`<button class="btn btn-outline btn-sm" onclick="openEditPost(${p.id})">수정</button>`:'';
-      const delBtn=canManage?`<button class="btn btn-danger btn-sm" onclick="confirmDelete(${p.id})">삭제</button>`:'';
+      const moreBtn = canManage ? `
+        <div class="more-wrap" id="mw-${p.id}">
+          <button class="more-btn" onclick="toggleMore(event,${p.id})" title="더보기">···</button>
+        </div>` : '';
       const liked=state.myLikes.has(p.id);
       const likeCount=state.likes[p.id]||0;
       const cmtCount=state.commentCounts[p.id]||0;
@@ -592,7 +603,7 @@ function renderApp(){
             <div class="card-actions">
               <button class="like-btn ${liked?'liked':''}" onclick="toggleLike(event,${p.id})">❤️ ${likeCount}</button>
               <button class="comment-btn" onclick="openDetail(${p.id})">💬 ${cmtCount}</button>
-              ${editBtn}${delBtn}
+              ${moreBtn}
             </div>
           </div>
         </div>
@@ -913,6 +924,25 @@ async function addCat(){
   renderApp();
 }
 
+/* ── More menu (card) ── */
+function toggleMore(e, postId){
+  e.stopPropagation();
+  const wrap = document.getElementById('mw-'+postId);
+  if(!wrap) return;
+  const existing = wrap.querySelector('.more-menu');
+  /* close all other open menus */
+  document.querySelectorAll('.more-menu').forEach(m=>{ if(m!==existing) m.remove(); });
+  if(existing){ existing.remove(); return; }
+  const menu = document.createElement('div');
+  menu.className = 'more-menu';
+  menu.innerHTML = `
+    <button class="more-menu-item" onclick="openEditPost(${postId});closeMoreMenus()">✏️ 수정</button>
+    <button class="more-menu-item danger" onclick="confirmDelete(${postId});closeMoreMenus()">🗑️ 삭제</button>`;
+  wrap.appendChild(menu);
+}
+function closeMoreMenus(){ document.querySelectorAll('.more-menu').forEach(m=>m.remove()); }
+document.addEventListener('click', closeMoreMenus);
+
 /* ── Admin Auth ── */
 function openAdminLogin(){
   openModal(`<div class="modal-title">🔑 관리자 로그인</div>
@@ -955,5 +985,6 @@ fetchAll();
 </script>
 </body>
 </html>
+
 
 
